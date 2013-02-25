@@ -140,4 +140,22 @@ function GameBoard(can, x, y){
 			return highY;
 		};
 	};
+	function CanvasObj(x, y, w, h){
+		var xCoord = x;
+		var yCoord = y;
+		var width = w;
+		var height = h;
+		this.getObjX = function(){
+			return xCoord;
+		};
+		this.getObjY = function(){
+			return yCoord;
+		};
+		this.getObjWidth = function(){
+			return width;
+		}
+		this.getObjHeight = function(){
+			return height;
+		};
+	};
 }
