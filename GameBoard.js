@@ -71,8 +71,11 @@ function GameBoard(can, x, y){
 	};
 	/*Pass in x,y coordinates of two objects (or future positions)
 	 * to check to see if they exist in the same block. If yes, then
-	 * collision*/
-	this.checkCollision = function(x1, y1, x2, y2){
+	 * collision.
+	 * NOTE: Only checks for block to block collision. For
+	 * collisions within blocks based on pixels and object widths, well
+	 * wait for verision 1.1.*/
+	this.checkBlockCollision = function(x1, y1, x2, y2){
 		var block1 = that.getBlockPosition(x1, y1);
 		var block2 = that.getBlockPosition(x2, y2);
 		if(block1.getXBlock() === block2.getXBlock() && block1.getYBlock === block2.getYBlock)
