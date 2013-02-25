@@ -12,13 +12,15 @@
 * respectively are represented in.
 */
 function GameBoard(can, x, y){
-	var context = can.getContext("2d");
+	this.context = can.getContext("2d");
 	var canvas = can;
 	var height = can.height;
 	var width = can.width;
 	var widthBlocks = x;
 	var heightBlocks = y;
 	var totalBlocks = x*y;
+	var xPixelsPerBlock = this.getCanvasWidth()/this.getWidthBlocks();
+	var yPixelsPerBlock = this.getCanvasHeight()/this.getHeightBlocks();
 	this.img = new Image();
 	var that = this;
 	/*Array for end-user to modify as they please. Typically
@@ -28,9 +30,6 @@ function GameBoard(can, x, y){
 	/*getters*/
 	this.isCanvasSupported = function(){
 		return canvas.getContext ? true : false;
-	};
-	this.getContext = function(){
-		return context;
 	};
 	this.getCanvas = function(){
 		return canvas;
@@ -62,6 +61,12 @@ function GameBoard(can, x, y){
 	this.setHeightBlocks = function(hb){
 		heightBlocks = hb;
 	};
+	this.getXPixelsPerBlock = function(){
+		return xPixelsPerBlock;
+	};
+	this.getYPixelsPerBlock = function(){
+		return yPixelsPerBlock;
+	};
 	/*Resize the canvas. X and Y are new dimensions in pixels. 
 	* If percent == true, X and Y are treated as percents and the
 	* the canvas will be resized based on those*/
@@ -72,10 +77,7 @@ function GameBoard(can, x, y){
 	/*Takes in an x and y coordinate. Returns 
 	* block coordinate object*/
 	this.getBlockPosition = function(x, y){
-		var xPixelsPerBlock = width/widthBlocks;
-		var yPixelsPerBlock = height/heightBlocks;
-		var block = new Block(Math.floor(x/xPixelsPerBlock), Math.floor(y/yPixelsPerBlock));
-		return block;
+		return new Block(Math.floor(xPixelsPerBlock), Math.floor(yPixelsPerBlock));
 	};
 	/*Pass in x,y coordinates of two objects (or future positions)
 	 * to check to see if they exist in the same block. If yes, then
@@ -94,20 +96,12 @@ function GameBoard(can, x, y){
 		var xBlock = x;
 		var yBlock = y;
 		/*Use ranges for more control in custom collision detecting*/ 
-		var lowX;
-		var highX;
-		var lowY;
-		var highY;
+		var lowX = that.xPixelsPerBlock*this.getXBlock();
+		var highX = that.xPixelsPerBlock*(this.getXBlock()+1);
+		var lowY = that.yPixelsPerBlock*this.getYBlock();
+		var highY = that.yPixelsPerBlock*(this.getYBlock()+1);
 		/*Sets x and y ranges of coordinates based 
 		* on block coordinates*/
-		this.setRanges = function(){
-			var xPixels = width/widthBlocks;
-			var yPixels = height/heightBlocks;
-			lowX = xPixels*xBlock;
-			highX = xPixels*(xBlock+1);
-			lowY = yPixels*yBlock;
-			highY = yPixels*(yBlock+1);
-		};
 		this.getXBlock = function(){
 			return xBlock;
 		};
