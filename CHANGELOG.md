@@ -1,3 +1,7 @@
+v0.1.2
+======
+- Added Features
+	- Collisions can now be detected on a pixel and block level.
 v0.1.1
 ======
 - Added Features
