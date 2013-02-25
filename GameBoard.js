@@ -97,8 +97,9 @@ function GameBoard(can, x, y){
 	* these are the coordinates of the top left corner,
 	* not the center of the image 
 	*/
-	this.checkPixelCollision = function(x1, y1, x2, y2, obj1Width, obj1Height, obj2Witdh, obj2Height){
-		if(doIntersectX(x1, x2, obj1Width, obj2Witdh) && doIntersectY(y1, y2, obj1Height, obj2Height)) return true;
+	this.checkPixelCollision = function(canvasObj1, canvasObj2){
+		if(doIntersectX(canvasObj1.getObjX(), canvasObj2.getObjX(), canvasObj1.getObjWidth(), 
+			canvasObj2.getObjWidth()) && doIntersectY(canvasObj1.getObjY(), canvasObj2.getObjY(), canvasObj1.getObjHeight(), canvasObj2.getObjHeight())) return true;
 		return false;
 	};
 		/*private helper function*/
@@ -111,7 +112,7 @@ function GameBoard(can, x, y){
 		if((y1 >= y2) && (y1 <= (y2+obj2H))) return true;
 		return false;
 	};
-	function Block(x, y){
+	this.Block = function(x, y){
 		var xBlock = x;
 		var yBlock = y;
 		/*Use ranges for more control in custom collision detecting*/ 
@@ -140,7 +141,7 @@ function GameBoard(can, x, y){
 			return highY;
 		};
 	};
-	function CanvasObj(x, y, w, h){
+	this.CanvasObj = function(x, y, w, h){
 		var xCoord = x;
 		var yCoord = y;
 		var width = w;
