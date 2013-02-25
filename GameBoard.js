@@ -19,8 +19,6 @@ function GameBoard(can, x, y){
 	var widthBlocks = x;
 	var heightBlocks = y;
 	var totalBlocks = x*y;
-	var xPixelsPerBlock = this.getCanvasWidth()/this.getWidthBlocks();
-	var yPixelsPerBlock = this.getCanvasHeight()/this.getHeightBlocks();
 	this.img = new Image();
 	var that = this;
 	/*Array for end-user to modify as they please. Typically
@@ -61,6 +59,9 @@ function GameBoard(can, x, y){
 	this.setHeightBlocks = function(hb){
 		heightBlocks = hb;
 	};
+	/*variables and methods relating to the number of pixels per block*/
+	var xPixelsPerBlock = this.getCanvasWidth()/this.getWidthBlocks();
+	var yPixelsPerBlock = this.getCanvasHeight()/this.getHeightBlocks();
 	this.getXPixelsPerBlock = function(){
 		return xPixelsPerBlock;
 	};
@@ -92,6 +93,10 @@ function GameBoard(can, x, y){
 			return true;
 		return false;
 	};
+	/*Coordinates of two objects in the same block. Note, 
+	* these are the coordinates of the top left corner,
+	* not the center of the image 
+	*/
 	this.checkPixelCollision = function(x1, y1, x2, y2, obj1Width, obj1Height, obj2Witdh, obj2Height){
 		if(doIntersectX(x1, x2, obj1Width, obj2Witdh) && doIntersectY(y1, y2, obj1Height, obj2Height)) return true;
 		return false;
@@ -134,8 +139,5 @@ function GameBoard(can, x, y){
 		this.getHighY = function(){
 			return highY;
 		};
-		/*Coordinates of two objects in the same block. Note, 
-		* these are the coordinates of the top left corner,
-		* not the center of the image */
 	};
 }
