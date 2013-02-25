@@ -1,3 +1,8 @@
+v0.1.3
+======
+- Bug Fixes
+	- fixed accessibilty bug, couldn't access block or canvas objects inside GameBoard.
+
 v0.1.2
 ======
 - Added Features
