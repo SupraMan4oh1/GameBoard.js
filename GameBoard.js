@@ -1,5 +1,5 @@
 /**
- * GameBoard.js v0.1.0
+ * GameBoard.js v0.1.3
  * http://github.com/shadowthekid/GameBoard.js
  * 
  * Copyright Brendan Conron
