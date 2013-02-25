@@ -1,4 +1,4 @@
-GameBoard.js (V 0.1.0)
+GameBoard.js (V 0.1.2)
 ============
 
 Library of javascript functions that makes HTML5 canvas easy to interact with for building grid based web games.
@@ -7,11 +7,11 @@ Features:
 =========
 - Divides HTML5 Canvas into easy to interact with blocks.
 - Detects block collisions (character colliding with wall)
+- Detects collisions of objects based on canvas pixel coordinates and object dimensions
 - Quick resizing of canvas element (percent and pixel based)
 
 Coming Soon:
 ============
-- Collision detection within blocks on the pixel level
 - Block-to-move-to based on keypress events
 
 Example Code:
@@ -49,5 +49,10 @@ Example Code:
     gameBoard.img.onload = function(){
     	//Draw to the canvas here.
     }
+
+    /*Check if two objects on the cavnas collide on
+    * the pixel level.
+    */
+    var collide = checkPixelCollision(5, 0, 9, 0, 20, 5, 10, 30); // Returns true;
 
 NOTE: The grid system is labeled with blocks (0,0) in the upper left corner.
