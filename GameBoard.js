@@ -19,8 +19,16 @@ function GameBoard(can, x, y){
 	var widthBlocks = x;
 	var heightBlocks = y;
 	var totalBlocks = x*y;
+	this.img = new Image();
 	var that = this;
+	/*Array for end-user to modify as they please. Typically
+	* used to store the board as a collection of Block objects.
+	*/ 
+	this.blocksBoard = [[]];
 	/*getters*/
+	this.isCanvasSupported = function(){
+		return canvas.getContext ? true : false;
+	};
 	this.getContext = function(){
 		return context;
 	};

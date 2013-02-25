@@ -44,3 +44,8 @@ Example Code:
     }else{
     	//do something else
     }
+
+    gameBoard.img.src = "FILENAME_HERE";
+    gameBoard.img.onload = function(){
+    	//Draw to the canvas here.
+    }
