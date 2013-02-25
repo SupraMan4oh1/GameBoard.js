@@ -31,13 +31,13 @@ function GameBoard(can, x, y){
 		return heightBlocks;
 	};
 	/*setters and private helper functions*/
-	var setCanvasWidth = function(w){
-		width = w;
-		canvas.width = w;
+	var setCanvasWidth = function(w, percent){
+		percent ? width*=w : width = w;
+		canvas.width = width;
 	};
-	var setCanvasHeight = function(h){
-		height = h;
-		canvas.height = h;
+	var setCanvasHeight = function(h, percent){
+		percent ? height = h*height : height = h;
+		canvas.height = height;
 	};
 	this.setWidthBlocks = function(wb){
 		widthBlocks = wb;
@@ -46,9 +46,12 @@ function GameBoard(can, x, y){
 		heightBlocks = hb;
 	};
 
-	this.resizeCanvas = function(w, h){
-		setCanvasWidth(w);
-		setCanvasHeight(h);
+	/*Resize the canvas. X and Y are new dimensions in pixels. 
+	* If percent == true, X and Y are treated as percents and the
+	* the canvas will be resized based on those*/
+	this.resizeCanvas = function(w, h, percent){
+		setCanvasWidth(w, percent);
+		setCanvasHeight(h, percent);
 	}
 
 }
