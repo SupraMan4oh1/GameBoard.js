@@ -92,6 +92,20 @@ function GameBoard(can, x, y){
 			return true;
 		return false;
 	};
+	this.checkPixelCollision = function(x1, y1, x2, y2, obj1Width, obj1Height, obj2Witdh, obj2Height){
+		if(doIntersectX(x1, x2, obj1Width, obj2Witdh) && doIntersectY(y1, y2, obj1Height, obj2Height)) return true;
+		return false;
+	};
+		/*private helper function*/
+	var doIntersectX = function(x1, x2, obj1W, obj2W){
+		if((x2 >= x1) && (x2 <= (x1+obj1W))) return true;
+		if((x1 >= x2) && (x1 <= (x2+obj2W))) return true; return false;
+	};
+	var doIntersectY = function(y1, y2, obj1H, obj2H){
+		if((y2 >= y1) && (y2 <= (y1+obj1H))) return true;
+		if((y1 >= y2) && (y1 <= (y2+obj2H))) return true;
+		return false;
+	};
 	function Block(x, y){
 		var xBlock = x;
 		var yBlock = y;
@@ -123,19 +137,5 @@ function GameBoard(can, x, y){
 		/*Coordinates of two objects in the same block. Note, 
 		* these are the coordinates of the top left corner,
 		* not the center of the image */
-		this.checkPixelCollision = function(x1, y1, x2, y2, obj1Width, obj1Height, obj2Witdh, obj2Height){
-			if(doIntersectX(x1, x2, obj1Width, obj2Witdh) && doIntersectY(y1, y2, obj1Height, obj2Height)) return true;
-			return false;
-		};
-		/*private helper function*/
-		var doIntersectX = function(x1, x2, obj1W, obj2W){
-			if((x2 >= x1) && (x2 <= (x1+obj1W))) return true;
-			if((x1 >= x2) && (x1 <= (x2+obj2W))) return true; return false;
-		};
-		var doIntersectY = function(y1, y2, obj1H, obj2H){
-			if((y2 >= y1) && (y2 <= (y1+obj1H))) return true;
-			if((y1 >= y2) && (y1 <= (y2+obj2H))) return true;
-			return false;
-		};
 	};
 }
