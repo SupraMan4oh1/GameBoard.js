@@ -1,4 +1,4 @@
-GameBoard.js (V 1.0)
+GameBoard.js (V 0.1.0)
 ============
 
 Library of javascript functions that makes HTML5 canvas easy to interact with for building grid based web games.
