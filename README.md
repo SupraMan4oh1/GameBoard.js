@@ -23,7 +23,7 @@ Example Code:
 	* respectively 
 	*/
     var gameBoard = new GameBoard(canvas, 5, 5);
-    /* Resizes canvas with a width of 500px and 
+    /*Resizes canvas with a width of 500px and 
     * a height of 1000px.
     */
     gameBoard.resizeCanvas(500, 1000, false);
@@ -36,7 +36,7 @@ Example Code:
     var xBlock = block.getXBlock();
     var yBlock = block.getYBlock();
 
-    /* Check for block collision between two sets of
+    /*Check for block collision between two sets of
     * coordintes on the canvas.
     */
     if(gameBoard.checkBlockCollision(50, 100, 78, 45){
