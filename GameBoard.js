@@ -1,5 +1,10 @@
+/*game board object
+* can is the canvas object
+* x and y are the number of grids that the width and height
+* respectively are represented in.
+*/
 function GameBoard(can, x, y){
-	var context = can.getContext("2d")f;
+	var context = can.getContext("2d");
 	var canvas = can;
 	var height = can.height;
 	var width = can.width;
@@ -25,13 +30,14 @@ function GameBoard(can, x, y){
 	this.getHeightBlocks = function(){
 		return heightBlocks;
 	};
-	/*setters*/
-	/*private helper functions*/
+	/*setters and private helper functions*/
 	var setCanvasWidth = function(w){
 		width = w;
+		canvas.width = w;
 	};
 	var setCanvasHeight = function(h){
 		height = h;
+		canvas.height = h;
 	};
 	this.setWidthBlocks = function(wb){
 		widthBlocks = wb;
