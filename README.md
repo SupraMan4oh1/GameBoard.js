@@ -49,3 +49,5 @@ Example Code:
     gameBoard.img.onload = function(){
     	//Draw to the canvas here.
     }
+
+NOTE: The grid system is labeled with blocks (0,0) in the upper left corner.
