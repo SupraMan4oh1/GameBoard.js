@@ -8,3 +8,8 @@ Features:
 - Divides HTML5 Canvas into easy to interact with blocks.
 - Detects block collisions (character colliding with wall)
 - Quick resizing of canvas element (percent and pixel based)
+
+Coming Soon:
+============
+- Collision detection within blocks on the pixel level
+- Block-to-move-to based on keypress events
