@@ -19,6 +19,7 @@ function GameBoard(can, x, y){
 	var widthBlocks = x;
 	var heightBlocks = y;
 	var totalBlocks = x*y;
+	var that = this;
 	/*getters*/
 	this.getContext = function(){
 		return context;
@@ -68,19 +69,39 @@ function GameBoard(can, x, y){
 		var block = new Block(Math.floor(x/xPixelsPerBlock), Math.floor(y/yPixelsPerBlock));
 		return block;
 	};
+	/*Pass in x,y coordinates of two objects (or future positions)
+	 * to check to see if they exist in the same block. If yes, then
+	 * collision*/
+	this.checkCollision = function(x1, y1, x2, y2){
+		var block1 = that.getBlockPosition(x1, y1);
+		var block2 = that.getBlockPosition(x2, y2);
+		if(block1.getXBlock() === block2.getXBlock() && block1.getYBlock === block2.getYBlock)
+			return true;
+		return false;
+	};
 	function Block(x, y){
 		var xBlock = x;
-		var yBlock = y; 
+		var yBlock = y;
+		/*Use ranges for more control in custom collision detecting*/ 
 		var lowX;
 		var highX;
 		var lowY;
 		var highY;
 		/*Sets x and y ranges of coordinates based 
-		* on block coordinates. Private helper function*/
-		var setRanges = function(){
+		* on block coordinates*/
+		this.setRanges = function(){
 			var xPixels = width/widthBlocks;
 			var yPixels = height/heightBlocks;
-
+			lowX = xPixels*xBlock;
+			highX = xPixels*(xBlock+1);
+			lowY = yPixels*yBlock;
+			highY = yPixels*(yBlock+1);
+		};
+		this.getXBlock = function(){
+			return xBlock;
+		};
+		this.getYBlock = function(){
+			return yBlock;
 		};
 		this.getLowX = function(){
 			return lowX;
@@ -94,5 +115,5 @@ function GameBoard(can, x, y){
 		this.getHighY = function(){
 			return highY;
 		};
-	}
+	};
 }
