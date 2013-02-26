@@ -140,6 +140,7 @@ var GameBoard = (function(){
 				return highY;
 			};
 		};
+		
 		this.CanvasObj = function(x, y, w, h){
 			var xCoord = x;
 			var yCoord = y;
