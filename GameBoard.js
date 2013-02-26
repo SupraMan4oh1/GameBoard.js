@@ -14,10 +14,10 @@
 var GameBoard = (function(){
 	var constr = function(can, x, y){
 		//private
-		this.context = can.getContext("2d");
+		this.context = canv.getContext("2d");
 		var canvas = can;
-		var height = can.height;
-		var width = can.width;
+		var height = canvas.height;
+		var width = canvas.width;
 		var widthBlocks = x;
 		var heightBlocks = y;
 		var totalBlocks = x*y;
