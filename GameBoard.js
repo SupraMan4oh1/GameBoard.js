@@ -237,31 +237,41 @@ var GameBoard = (function(){
 }());
 
 /* Constructors for types used in the GameBoard */
-function Point(x,y) {
-	this.x = x;
-	this.y = y;
-}
-function Size(width, height) {
-	this.width = width;
-	this.height = height;
-}
-function Frame(origin, size) {
-	this.origin = origin;
-	this.size = size;
-	this.lr = new Point(origin.x + size.width, origin.y + size.height);
+var Point = (function(){
+	var constr = function(x, y){
+		this.x = x;
+		this.y = y;
+	};
+	return constr;
+}());
 
-	/* Returns true if the two frames share any common pixels */
-	this.hitTest = function (frame) {
-		var isInInterval = function (x, min, max) {
-			return (x >= min && x <= max);
-		}
-		var containsPoint = function (frame, p) {
-			return (isInInterval(p.x, frame.origin.x, frame.lr.x) && isInInterval(p.y, frame.origin.y, frame.lr.y));
-		}
+var Size = (function(){
+	var constr = function(width, height){
+		this.width = width;
+		this.height = height;
+	};
+	return constr;
+}());
 
-		return containsPoint(this, frame.origin) || containsPoint(this, frame.lr) || 
-			   containsPoint(this, new Point(frame.origin.x, frame.lr.y)) || containsPoint(this, new Point(frame.lr.x, frame.origin.y));
-	}
-}
+var Frame = (function(){
+	var constr = function(origin, size){
+		this.origin = origin;
+		this.size = size;
+		this.lr = new Point(origin.x + size.width, origin.y + size.height);
+		/* Returns true if the two frames share any common pixels */
+		this.hitTest = function (frame) {
+			var isInInterval = function (x, min, max) {
+				return (x >= min && x <= max);
+			};
+			var containsPoint = function (frame, p) {
+				return (isInInterval(p.x, frame.origin.x, frame.lr.x) && isInInterval(p.y, frame.origin.y, frame.lr.y));
+			};
+
+			return containsPoint(this, frame.origin) || containsPoint(this, frame.lr) || 
+				   containsPoint(this, new Point(frame.origin.x, frame.lr.y)) || containsPoint(this, new Point(frame.lr.x, frame.origin.y));
+		};
+	};
+	return constr;
+}());
 
 
