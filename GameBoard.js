@@ -12,7 +12,7 @@
 * respectively are represented in.
 */
 var GameBoard = (function(){
-	var constr = function(can, x, y){
+	var constr = function(can, x, y, ){
 		//private
 		this.context = canv.getContext("2d");
 		var canvas = can;
@@ -43,8 +43,8 @@ var GameBoard = (function(){
 			return heightBlocks;
 		};
 		var setCanvasWidth = function(w, percent){
-		percent ? width*=w : width = w;
-		canvas.width = width;
+			percent ? width*=w : width = w;
+			canvas.width = width;
 		};
 		var setCanvasHeight = function(h, percent){
 			percent ? height = h*height : height = h;
@@ -140,7 +140,15 @@ var GameBoard = (function(){
 				return highY;
 			};
 		};
-		
+
+		this.originForBlock(x, y) {
+			/* DO THIS BRENDEN */
+		}
+
+		this.originToCenterFrameInBlock(frame, x, y) {
+
+		}
+
 		this.CanvasObj = function(x, y, w, h){
 			var xCoord = x;
 			var yCoord = y;
@@ -161,17 +169,34 @@ var GameBoard = (function(){
 		};
 
 		this.views = [];
-		this.addView = function(view) {
-			views.push(view);
+		this.addView = function (view) {
+			this.views.push(view);
 		};
+		this.removeView = function (view) {
+			/* filters out the value to remove */
+			this.views = this.views.filter(function (v) {
+				return !(v===view);
+			})
+		}
 
+		/* Calls f on all the elems of the list that pass p and implement f */
 		var apply = function (f, p, list) {
 			for (var i in list) {
-				if (p(i) == true && p.f != undefined) {
+				if (p(i) === true && p.f !== undefined && typeof p.f === 'function') {
 					p.f();
 				}
 			}
 		};
+
+		/* Calls the user's collision callback if the view's frame shares any 
+		   common pixels with any other frames in the GameBoard */
+		var handleCollisionsForView = function (view) {
+			views.forEach(function(elem, index, array) {
+				if (view.frame.hitTest(elem) == true) {
+					return this.collisionCallback(view, elem);
+				}
+			});
+		}
 
 		this.draw = function(p) {
 			apply(draw, p, views);
@@ -179,26 +204,28 @@ var GameBoard = (function(){
 
 		this.move = function(p) {
 			apply(move, p, views);
+			this.views.forEach(handleCollisionsForView, this); 
+			/* ^^ Dont need to call this on every view, just the ones moved */
 		}
 	};
 	return constr;
 }());
 
+/* Constructors for types used in the GameBoard */
 function Point(x,y) {
 	this.x = x;
 	this.y = y;
 }
-
 function Size(width, height) {
 	this.width = width;
 	this.height = height;
 }
-
 function Frame(origin, size) {
 	this.origin = origin;
 	this.size = size;
 	this.lr = new Point(origin.x + size.width, origin.y + size.height);
 
+	/* Returns true if the two frames share any common pixels */
 	this.hitTest = function (frame) {
 		var isInInterval = function (x, min, max) {
 			return (x >= min && x <= max);
