@@ -102,13 +102,15 @@ var GameBoard = (function(){
 			/*private helper function*/
 		var doIntersectX = function(x1, x2, obj1W, obj2W){
 			if((x2 >= x1) && (x2 <= (x1+obj1W))) return true;
-			if((x1 >= x2) && (x1 <= (x2+obj2W))) return true; return false;
+			if((x1 >= x2) && (x1 <= (x2+obj2W))) return true; 
+			return false;
 		};
 		var doIntersectY = function(y1, y2, obj1H, obj2H){
 			if((y2 >= y1) && (y2 <= (y1+obj1H))) return true;
 			if((y1 >= y2) && (y1 <= (y2+obj2H))) return true;
 			return false;
 		};
+		/* Block-structor */
 		this.Block = function(x, y){
 			var xBlock = x;
 			var yBlock = y;
@@ -156,6 +158,57 @@ var GameBoard = (function(){
 				return height;
 			};
 		};
+
+		this.views = [];
+		this.addView = function(view) {
+			views.push(view);
+		};
+
+		var apply = function (f, p, list) {
+			for (var i in list) {
+				if (p(i) == true && p.f != undefined) {
+					p.f();
+				}
+			}
+		};
+
+		this.draw = function(p) {
+			apply(draw, p, views);
+		}
+
+		this.move = function(p) {
+			apply(move, p, views);
+		}
 	};
 	return constr;
 }());
+
+function Point(x,y) {
+	this.x = x;
+	this.y = y;
+}
+
+function Size(width, height) {
+	this.width = width;
+	this.height = height;
+}
+
+function Frame(origin, size) {
+	this.origin = origin;
+	this.size = size;
+	this.lr = new Point(origin.x + size.width, origin.y + size.height);
+
+	this.hitTest = function (frame) {
+		var isInInterval = function (x, min, max) {
+			return (x >= min && x <= max);
+		}
+		var containsPoint = function (frame, p) {
+			return (isInInterval(p.x, frame.origin.x, frame.lr.x) && isInInterval(p.y, frame.origin.y, frame.lr.y));
+		}
+
+		return containsPoint(this, frame.origin) || containsPoint(this, frame.lr) || 
+			   containsPoint(this, new Point(frame.origin.x, frame.lr.y)) || containsPoint(this, new Point(frame.lr.x, frame.origin.y));
+	}
+}
+
+
