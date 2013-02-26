@@ -17,19 +17,19 @@ var GameBoard = (function(){
 		document.onkeydown = function(e){
 			switch(e.keyCode){
 				case 37:
-					this.move("left");
+					//this.move("left");
 					console.log(e.keyCode);
 					break;
 				case 38:
-					this.move("up");
+					//this.move("up");
 					console.log(e.keyCode);
 					break;
 				case 39:
-					this.move("right");
+					//this.move("right");
 					console.log(e.keyCode);
 					break;
 				case 40:
-					this.move("down");
+					//this.move("down");
 					console.log(e.keyCode);
 					break;
 				default:
@@ -164,16 +164,20 @@ var GameBoard = (function(){
 				return highY;
 			};
 		};
-
-		this.originForBlock = function(x, y) {
-			/* DO THIS BRENDEN */
-			/* Ok bitch, first of all, it's Brendan. And yes, I will. */
+		var doesExistWithinBoard = function(x, y){
+			(x <= width && x >= 0)&&(y <= height && y >= 0)?true:false;
 		};
-
+		this.originForBlock = function(x, y) {
+			/*if(doesExistWithinBoard(x,y))  
+				return new Point((x%xPixelsPerBlock)*xPixelsPerBlock, (y%yPixelsPerBlock)*yPixelsPerBlock);
+			console.log(doesExistWithinBoard(x,y));
+			return -1;*/
+		};
+		
 		this.originToCenterFrameInBlock = function(frame, x, y) {
 
 		};
-
+		/*Deprecated, remove*/
 		this.CanvasObj = function(x, y, w, h){
 			var xCoord = x;
 			var yCoord = y;
