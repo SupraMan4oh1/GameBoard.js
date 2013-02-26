@@ -12,13 +12,9 @@
 * respectively are represented in.
 */
 var GameBoard = (function(){
-<<<<<<< HEAD
 	var constr = function(can, x, y, ){
 		//private
-=======
-
 	var constr = function(canv, x, y){
->>>>>>> Added keypress events
 		this.context = canv.getContext("2d");
 		
 		document.onkeydown = function(e){
