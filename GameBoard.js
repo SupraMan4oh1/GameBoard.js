@@ -11,7 +11,6 @@
 * x and y are the number of grids that the width and height
 * respectively are represented in.
 */
-
 var GameBoard = (function(){
 	var constr = function(can, x, y){
 		//private
