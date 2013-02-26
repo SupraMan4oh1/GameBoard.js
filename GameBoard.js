@@ -222,7 +222,6 @@ var GameBoard = (function(){
 				}
 			});
 		}
-
 		this.draw = function(p) {
 			apply(draw, p, views);
 		}
