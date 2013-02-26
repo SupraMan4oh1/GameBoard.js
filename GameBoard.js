@@ -164,16 +164,14 @@ var GameBoard = (function(){
 				return highY;
 			};
 		};
-		var doesExistWithinBoard = function(x, y){
-			(x <= width && x >= 0)&&(y <= height && y >= 0)?true:false;
-		};
 		this.originForBlock = function(x, y) {
-			/*if(doesExistWithinBoard(x,y))  
+			if(doesExistWithinBoard(x,y))  
 				return new Point((x%xPixelsPerBlock)*xPixelsPerBlock, (y%yPixelsPerBlock)*yPixelsPerBlock);
-			console.log(doesExistWithinBoard(x,y));
-			return -1;*/
+			return -1;
 		};
-		
+		var doesExistWithinBoard = function(x, y){
+			return (x <= width && x >= 0)&&(y <= height && y >= 0)?true:false;
+		};
 		this.originToCenterFrameInBlock = function(frame, x, y) {
 
 		};
