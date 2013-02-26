@@ -12,10 +12,39 @@
 * respectively are represented in.
 */
 var GameBoard = (function(){
+<<<<<<< HEAD
 	var constr = function(can, x, y, ){
 		//private
+=======
+
+	var constr = function(canv, x, y){
+>>>>>>> Added keypress events
 		this.context = canv.getContext("2d");
-		var canvas = can;
+		
+		document.onkeydown = function(e){
+			switch(e.keyCode){
+				case 37:
+					//left
+					console.log(e.keyCode);
+					break;
+				case 38:
+					//up
+					console.log(e.keyCode);
+					break;
+				case 39:
+					//right
+					console.log(e.keyCode);
+					break;
+				case 40:
+					//down
+					console.log(e.keyCode);
+					break;
+				default:
+					break;
+			}
+		};
+				
+		var canvas = canv;
 		var height = canvas.height;
 		var width = canvas.width;
 		var widthBlocks = x;
