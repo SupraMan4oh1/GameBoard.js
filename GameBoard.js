@@ -12,34 +12,30 @@
 * respectively are represented in.
 */
 var GameBoard = (function(){
-	var constr = function(can, x, y, ){
-		//private
 	var constr = function(canv, x, y){
 		this.context = canv.getContext("2d");
-		
 		document.onkeydown = function(e){
 			switch(e.keyCode){
 				case 37:
-					//left
+					this.move("left");
 					console.log(e.keyCode);
 					break;
 				case 38:
-					//up
+					this.move("up");
 					console.log(e.keyCode);
 					break;
 				case 39:
-					//right
+					this.move("right");
 					console.log(e.keyCode);
 					break;
 				case 40:
-					//down
+					this.move("down");
 					console.log(e.keyCode);
 					break;
 				default:
 					break;
 			}
-		};
-				
+		};	
 		var canvas = canv;
 		var height = canvas.height;
 		var width = canvas.width;
@@ -49,6 +45,9 @@ var GameBoard = (function(){
 		var that = this;
 		//public for this instance
 		this.img = new Image();
+		this.move = function(dir){
+
+		};
 		this.isCanvasSupported = function(){
 			return canvas.getContext ? true : false;
 		};
@@ -166,13 +165,14 @@ var GameBoard = (function(){
 			};
 		};
 
-		this.originForBlock(x, y) {
+		this.originForBlock = function(x, y) {
 			/* DO THIS BRENDEN */
-		}
+			/* Ok bitch, first of all, it's Brendan. And yes, I will. */
+		};
 
-		this.originToCenterFrameInBlock(frame, x, y) {
+		this.originToCenterFrameInBlock = function(frame, x, y) {
 
-		}
+		};
 
 		this.CanvasObj = function(x, y, w, h){
 			var xCoord = x;
