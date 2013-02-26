@@ -1,3 +1,8 @@
+v0.1.4
+======
+- Refactoring
+	- Code updated to Javascript closure
+
 v0.1.3
 ======
 - Bug Fixes
