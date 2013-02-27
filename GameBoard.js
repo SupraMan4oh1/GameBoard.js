@@ -175,26 +175,6 @@ var GameBoard = (function(){
 		this.originToCenterFrameInBlock = function(frame, x, y) {
 
 		};
-		/*Deprecated, remove*/
-		this.CanvasObj = function(x, y, w, h){
-			var xCoord = x;
-			var yCoord = y;
-			var width = w;
-			var height = h;
-			this.getObjX = function(){
-				return xCoord;
-			};
-			this.getObjY = function(){
-				return yCoord;
-			};
-			this.getObjWidth = function(){
-				return width;
-			}
-			this.getObjHeight = function(){
-				return height;
-			};
-		};
-
 		this.views = [];
 		this.addView = function (view) {
 			this.views.push(view);
