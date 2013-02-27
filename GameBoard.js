@@ -14,11 +14,18 @@
 var GameBoard = (function(){
 	var constr = function(canv, x, y){
 		this.context = canv.getContext("2d");
+		var canvas = canv;
+		var height = canvas.height;
+		var width = canvas.width;
+		var widthBlocks = utility.checkInt(x);
+		var heightBlocks = utility.checkInt(y);
+		var totalBlocks = x*y;
+		var that = this;
+		//public for this instance
+		this.img = new Image();
 		document.onkeydown = function(e){
-
 			switch(utility.checkInt(e.keyCode)){
 				case 37:
-					//this.move("left");
 					console.log(e.keyCode);
 					break;
 				case 38:
@@ -36,18 +43,6 @@ var GameBoard = (function(){
 				default:
 					break;
 			}
-		};	
-		var canvas = canv;
-		var height = canvas.height;
-		var width = canvas.width;
-		var widthBlocks = utility.checkInt(x);
-		var heightBlocks = utility.checkInt(y);
-		var totalBlocks = x*y;
-		var that = this;
-		//public for this instance
-		this.img = new Image();
-		this.move = function(dir){
-
 		};
 		this.isCanvasSupported = function(){
 			return canvas.getContext ? true : false;
@@ -103,11 +98,9 @@ var GameBoard = (function(){
 			return new Block(Math.floor(xPixelsPerBlock), Math.floor(yPixelsPerBlock));
 		};
 		/*Pass in x,y coordinates of two objects (or future positions)
-		 * to check to see if they exist in the same block. If yes, then
-		 * collision.
-		 * NOTE: Only checks for block to block collision. For
-		 * collisions within blocks based on pixels and object widths, well
-		 * wait for verision 1.1.*/
+		* to check to see if they exist in the same block. If yes, then
+		* collision.
+		*/ 
 		this.checkBlockCollision = function(x1, y1, x2, y2){
 			var block1 = that.getBlockPosition(x1, y1);
 			var block2 = that.getBlockPosition(x2, y2);
@@ -202,16 +195,15 @@ var GameBoard = (function(){
 					return this.collisionCallback(view, elem);
 				}
 			});
-		}
+		};
 		this.draw = function(p) {
 			apply(draw, p, views);
-		}
-
-		this.move = function(p) {
-			apply(move, p, views);
-			this.views.forEach(handleCollisionsForView, this); 
+		};
+		/*this.move = function(p) {
+			apply(this, p, views);
+			this.views.forEach(handleCollisionsForView, this); */
 			/* ^^ Dont need to call this on every view, just the ones moved */
-		}
+		//}
 	};
 	return constr;
 }());
