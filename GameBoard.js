@@ -2,7 +2,7 @@
  * GameBoard.js v0.1.3
  * http://github.com/shadowthekid/GameBoard.js
  * 
- * Copyright Brendan Conron
+ * Copyright Brendan Conron, Ilan Gray
  * Released under the MIT license.
  */
 
