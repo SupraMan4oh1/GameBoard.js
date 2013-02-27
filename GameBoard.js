@@ -15,7 +15,8 @@ var GameBoard = (function(){
 	var constr = function(canv, x, y){
 		this.context = canv.getContext("2d");
 		document.onkeydown = function(e){
-			switch(e.keyCode){
+
+			switch(utility.checkInt(e.keyCode)){
 				case 37:
 					//this.move("left");
 					console.log(e.keyCode);
@@ -39,8 +40,8 @@ var GameBoard = (function(){
 		var canvas = canv;
 		var height = canvas.height;
 		var width = canvas.width;
-		var widthBlocks = x;
-		var heightBlocks = y;
+		var widthBlocks = utility.checkInt(x);
+		var heightBlocks = utility.checkInt(y);
 		var totalBlocks = x*y;
 		var that = this;
 		//public for this instance
@@ -185,16 +186,14 @@ var GameBoard = (function(){
 				return !(v===view);
 			})
 		}
-
 		/* Calls f on all the elems of the list that pass p and implement f */
 		var apply = function (f, p, list) {
 			for (var i in list) {
-				if (p(i) === true && p.f !== undefined && typeof p.f === 'function') {
+				if (p(i) === true && p.f != undefined && typeof p.f === 'function') {
 					p.f();
 				}
 			}
 		};
-
 		/* Calls the user's collision callback if the view's frame shares any 
 		   common pixels with any other frames in the GameBoard */
 		var handleCollisionsForView = function (view) {
@@ -220,16 +219,16 @@ var GameBoard = (function(){
 /* Constructors for types used in the GameBoard */
 var Point = (function(){
 	var constr = function(x, y){
-		this.x = x;
-		this.y = y;
+		this.x = utility.checkInt(x);
+		this.y = utility.checkInt(y);
 	};
 	return constr;
 }());
 
 var Size = (function(){
 	var constr = function(width, height){
-		this.width = width;
-		this.height = height;
+		this.width = utility.checkInt(width);
+		his.height = utility.height(height);
 	};
 	return constr;
 }());
@@ -247,12 +246,20 @@ var Frame = (function(){
 			var containsPoint = function (frame, p) {
 				return (isInInterval(p.x, frame.origin.x, frame.lr.x) && isInInterval(p.y, frame.origin.y, frame.lr.y));
 			};
-
 			return containsPoint(this, frame.origin) || containsPoint(this, frame.lr) || 
 				   containsPoint(this, new Point(frame.origin.x, frame.lr.y)) || containsPoint(this, new Point(frame.lr.x, frame.origin.y));
 		};
 	};
 	return constr;
 }());
+
+var utility = {
+	checkInt : function (x) { // inner function
+        if (x % 1 !== 0) {
+            throw new TypeError(x + " is not an integer"); // throw an exception
+        }
+        return x;
+    }
+}
 
 
