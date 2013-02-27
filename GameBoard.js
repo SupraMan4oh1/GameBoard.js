@@ -1,5 +1,5 @@
 /**
- * GameBoard.js v0.1.3
+ * GameBoard.js v0.1.4
  * http://github.com/shadowthekid/GameBoard.js
  * 
  * Copyright Brendan Conron, Ilan Gray
@@ -134,7 +134,6 @@ var GameBoard = (function(){
 				this.highScore = 0;
 			}
 		};
-
 		/* Block-structor */
 		this.Block = function(x, y){
 			var xBlock = x;
@@ -234,8 +233,8 @@ var Size = (function(){
 
 var Frame = (function(){
 	var constr = function(origin, size){
-		this.origin = origin;
-		this.size = size;
+		this.origin = utility.checkPoint(origin);
+		this.size = utility.checkSize(size);
 		this.lr = utility.checkPoint(new Point(origin.x + size.width, origin.y + size.height));
 		/* Returns true if the two frames share any common pixels */
 		this.hitTest = function (frame) {
