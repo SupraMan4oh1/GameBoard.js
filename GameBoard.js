@@ -229,7 +229,7 @@ var Frame = (function(){
 	var constr = function(origin, size){
 		this.origin = origin;
 		this.size = size;
-		this.lr = new Point(origin.x + size.width, origin.y + size.height);
+		this.lr = utility.checkPoint(new Point(origin.x + size.width, origin.y + size.height));
 		/* Returns true if the two frames share any common pixels */
 		this.hitTest = function (frame) {
 			var isInInterval = function (x, min, max) {
@@ -246,12 +246,30 @@ var Frame = (function(){
 }());
 
 var utility = {
-	checkInt : function (x) { // inner function
-        if (x % 1 !== 0) {
-            throw new TypeError(x + " is not an integer"); // throw an exception
-        }
+	checkInt : function(x) { 
+        if (x % 1 !== 0) 
+    		utility.erro(x, "is not an integer");
         return x;
+    },
+    checkPoint : function(x){
+    	if(!(x instanceof Point))
+    		utility.error(x, "is not a Point object");
+    	return x;
+    },
+    checkFrame : function(x){
+    	if(!(x instanceof Frame))
+    		utility.error(x, "is not a Frame object");
+    	return x;
+    },
+    checkSize : function(x){
+    	if(!(x instanceof Size))
+    		utility.error(x, "is not a Size object");
+    	return x;
     }
+    error : function(x, message){
+    	throw new TypeError(x + " " + message);
+    }
+
 }
 
 
