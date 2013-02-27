@@ -128,6 +128,13 @@ var GameBoard = (function(){
 			if((y1 >= y2) && (y1 <= (y2+obj2H))) return true;
 			return false;
 		};
+		this.score = {
+			init: function(){
+				this.points = 0;
+				this.highScore = 0;
+			}
+		};
+
 		/* Block-structor */
 		this.Block = function(x, y){
 			var xBlock = x;
@@ -265,11 +272,11 @@ var utility = {
     	if(!(x instanceof Size))
     		utility.error(x, "is not a Size object");
     	return x;
-    }
+    },
     error : function(x, message){
     	throw new TypeError(x + " " + message);
     }
-
 }
+
 
 
