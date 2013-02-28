@@ -188,8 +188,8 @@ var GameBoard = (function(){
 		/* Calls f on all the elems of the list that pass p and implement f */
 		var apply = function (f, p, list) {
 			for (var i in list) {
-				if (p(i) === true && p.f != undefined && typeof p.f === 'function') {
-					p.f();
+				if (p(i) === true && i.f != undefined && typeof i.f === 'function') {
+					i.f();
 				}
 			}
 		};
@@ -205,11 +205,11 @@ var GameBoard = (function(){
 		this.draw = function(p) {
 			apply(draw, p, views);
 		};
-		/*this.move = function(p) {
-			apply(this, p, views);
-			this.views.forEach(handleCollisionsForView, this); */
+		this.move = function(p) {
+			apply(move, p, views);
+			this.views.forEach(handleCollisionsForView, this); 
 			/* ^^ Dont need to call this on every view, just the ones moved */
-		//}
+		}
 	};
 	return constr;
 }());
