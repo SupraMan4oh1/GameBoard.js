@@ -114,7 +114,8 @@ var GameBoard = (function(){
 		*/
 		this.checkPixelCollision = function(canvasObj1, canvasObj2){
 			if(doIntersectX(canvasObj1.getObjX(), canvasObj2.getObjX(), canvasObj1.getObjWidth(), 
-				canvasObj2.getObjWidth()) && doIntersectY(canvasObj1.getObjY(), canvasObj2.getObjY(), canvasObj1.getObjHeight(), canvasObj2.getObjHeight())) return true;
+				canvasObj2.getObjWidth()) && doIntersectY(canvasObj1.getObjY(), canvasObj2.getObjY(),
+				 canvasObj1.getObjHeight(), canvasObj2.getObjHeight())) return true;
 			return false;
 		};
 			/*private helper function*/
@@ -213,7 +214,6 @@ var GameBoard = (function(){
 	};
 	return constr;
 }());
-
 /* Constructors for types used in the GameBoard */
 var Point = (function(){
 	var constr = function(x, y){
