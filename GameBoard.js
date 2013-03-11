@@ -184,18 +184,19 @@ var GameBoard = (function(){
 		};
 		this.views = [];
 		this.addView = function (view) {
-			this.views.push(utility.checkOrientation(view));
+			this.views.push(utility.checkView(view));
 		};
 		this.removeView = function (view) {
 			/* filters out the value to remove */
 			this.views = this.views.filter(function (v) {
 				return !(v===view);
 			})
-		}
+		};
 		/* Calls f on all the elems of the list that pass p and implement f */
 		var apply = function (f, p, list) {
 			for (var i in list) {
-				if (p(i) === true && i.f != undefined && typeof i.f === 'function') {
+				alert(f);
+				if (p(list[i]) === true && list[i].f != undefined && typeof list[i].f === 'function') {
 					i.f();
 				}
 			}
@@ -209,8 +210,9 @@ var GameBoard = (function(){
 				}
 			});
 		};
+
 		this.draw = function(p) {
-			apply(draw, p, views);
+			apply(draw, p, this.views);
 		};
 		this.move = function(p) {
 			apply(move, p, views);
@@ -222,7 +224,6 @@ var GameBoard = (function(){
 				alert("Canvas is not supported on your browser!");
 				return;
 			}
-
 		};
 	};
 	return constr;
@@ -240,6 +241,20 @@ var Size = (function(){
 	var constr = function(width, height){
 		this.width = utility.checkInt(width);
 		this.height = utility.checkInt(height);
+	};
+	return constr;
+}());
+
+/*View object*/
+var View = (function(){
+	var constr = function(f, o, i){
+		this.frame = utility.checkFrame(f);
+		this.orient = utility.checkOrientation(o);
+		/*user identification string*/
+		this.id = i;
+		this.draw = function(){
+			console.log("testing");
+		};
 	};
 	return constr;
 }());
@@ -305,6 +320,11 @@ var utility = {
     		utility.error(x, "is not an Orientation object");
     	return x;
     },	
+    checkView : function(x){
+    	if(!(x instanceof View))
+    		utility.error(x, "is not a View object");
+    	return x;
+    },
     error : function(x, message){
     	throw new TypeError(x + " " + message);
     }
