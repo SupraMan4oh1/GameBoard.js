@@ -195,10 +195,8 @@ var GameBoard = (function(){
 		/* Calls f on all the elems of the list that pass p and implement f */
 		var apply = function (f, p, list) {
 			for (var i in list) {
-				alert(f);
-				if (p(list[i]) === true && list[i].f != undefined && typeof list[i].f === 'function') {
-					i.f();
-				}
+				if (p(list[i]) === true && list[i][f] != undefined && typeof list[i][f] === 'function')
+					list[i][f]();
 			}
 		};
 		/* Calls the user's collision callback if the view's frame shares any 
@@ -212,7 +210,7 @@ var GameBoard = (function(){
 		};
 
 		this.draw = function(p) {
-			apply(draw, p, this.views);
+			apply("draw", p, this.views);
 		};
 		this.move = function(p) {
 			apply(move, p, views);
@@ -247,6 +245,7 @@ var Size = (function(){
 
 /*View object*/
 var View = (function(){
+	
 	var constr = function(f, o, i){
 		this.frame = utility.checkFrame(f);
 		this.orient = utility.checkOrientation(o);
