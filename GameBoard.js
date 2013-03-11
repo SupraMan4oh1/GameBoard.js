@@ -52,12 +52,7 @@ var GameBoard = (function(){
 					break;
 			}
 		};
-		this.isCanvasSupported = function(){
-			return canvas.getContext ? true : false;
-		};
-		if(!this.isCanvasSupported()){
-			alert("Canvas is not supported on this browser!");
-		}
+		this.isCanvasSupported = canvas.getContext ? true : false;
 		this.getCanvas = function(){
 			return canvas;
 		};
@@ -189,7 +184,7 @@ var GameBoard = (function(){
 		};
 		this.views = [];
 		this.addView = function (view) {
-			this.views.push(view);
+			this.views.push(utility.checkOrientation(view));
 		};
 		this.removeView = function (view) {
 			/* filters out the value to remove */
@@ -221,7 +216,14 @@ var GameBoard = (function(){
 			apply(move, p, views);
 			this.views.forEach(handleCollisionsForView, this); 
 			/* ^^ Dont need to call this on every view, just the ones moved */
-		}
+		};
+		this.render = function(){
+			if(!this.isCanvasSupported){
+				alert("Canvas is not supported on your browser!");
+				return;
+			}
+
+		};
 	};
 	return constr;
 }());
@@ -264,6 +266,19 @@ var Frame = (function(){
 	return constr;
 }());
 
+/*holds sprite sheet information necessary for canvas drawing*/
+var Orientation = (function(){
+	var constr = function(topl, topr, w, h, ws, hs){
+		this.tl = topl;
+		this.tr = topr;
+		this.width = w;
+		this.height = h;
+		this.widthScale = ws;
+		this.heightScale = hs;
+	};
+	return constr;
+}());
+
 var utility = {
 	checkInt : function(x) { 
         if (x % 1 !== 0) 
@@ -285,6 +300,11 @@ var utility = {
     		utility.error(x, "is not a Size object");
     	return x;
     },
+    checkOrientation : function(x){
+    	if(!(x instanceof Orientation))
+    		utility.error(x, "is not an Orientation object");
+    	return x;
+    },	
     error : function(x, message){
     	throw new TypeError(x + " " + message);
     }
