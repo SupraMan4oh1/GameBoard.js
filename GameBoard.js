@@ -12,7 +12,7 @@
 * respectively are represented in.
 */
 var GameBoard = (function(){
-	var constr = function(canv, x, y){
+	var constr = function(canv, x, y, image){
 		this.context = canv.getContext("2d");
 		var canvas = canv;
 		var height = canvas.height;
@@ -22,14 +22,22 @@ var GameBoard = (function(){
 		var totalBlocks = x*y;
 		var that = this;
 		//public for this instance
-		this.img = new Image();
+		this.img = image;
+		this.movePlayer = function(direction){
+			switch(direction){
+				case 'U':
+					break;
+				default:
+					break;
+			}
+		};
 		document.onkeydown = function(e){
 			switch(utility.checkInt(e.keyCode)){
 				case 37:
 					console.log(e.keyCode);
 					break;
 				case 38:
-					//this.move("up");
+					this.movePlayer("U");
 					console.log(e.keyCode);
 					break;
 				case 39:
@@ -47,6 +55,9 @@ var GameBoard = (function(){
 		this.isCanvasSupported = function(){
 			return canvas.getContext ? true : false;
 		};
+		if(!this.isCanvasSupported()){
+			alert("Canvas is not supported on this browser!");
+		}
 		this.getCanvas = function(){
 			return canvas;
 		};
@@ -226,7 +237,7 @@ var Point = (function(){
 var Size = (function(){
 	var constr = function(width, height){
 		this.width = utility.checkInt(width);
-		his.height = utility.height(height);
+		this.height = utility.checkInt(height);
 	};
 	return constr;
 }());
@@ -235,7 +246,9 @@ var Frame = (function(){
 	var constr = function(origin, size){
 		this.origin = utility.checkPoint(origin);
 		this.size = utility.checkSize(size);
-		this.lr = utility.checkPoint(new Point(origin.x + size.width, origin.y + size.height));
+		this.lr = (function(){
+			return utility.checkPoint(new Point(origin.x + size.width, origin.y + size.height));
+		}());
 		/* Returns true if the two frames share any common pixels */
 		this.hitTest = function (frame) {
 			var isInInterval = function (x, min, max) {
@@ -254,7 +267,7 @@ var Frame = (function(){
 var utility = {
 	checkInt : function(x) { 
         if (x % 1 !== 0) 
-    		utility.erro(x, "is not an integer");
+    		utility.error(x, "is not an integer");
         return x;
     },
     checkPoint : function(x){
