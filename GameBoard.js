@@ -13,40 +13,22 @@ var img;
 * respectively are represented in.
 */
 var GameBoard = (function(){
+	var prerendered = false;
 	var constr = function(canv, x, y, image){
 		var canvas = canv;
+		var ctx = canvas.getContext("2d");
 		var height = canvas.height;
 		var width = canvas.width;
 		var widthBlocks = utility.checkInt(x);
 		var heightBlocks = utility.checkInt(y);
 		var totalBlocks = x*y;
 		var that = this;
+		var control;
 		//public for this instance
 		this.img = image;
 		this.movePlayer = function(direction){
 			switch(direction){
 				case 'U':
-					break;
-				default:
-					break;
-			}
-		};
-		document.onkeydown = function(e){
-			switch(utility.checkInt(e.keyCode)){
-				case 37:
-					console.log(e.keyCode);
-					break;
-				case 38:
-					this.movePlayer("U");
-					console.log(e.keyCode);
-					break;
-				case 39:
-					//this.move("right");
-					console.log(e.keyCode);
-					break;
-				case 40:
-					//this.move("down");
-					console.log(e.keyCode);
 					break;
 				default:
 					break;
@@ -100,16 +82,16 @@ var GameBoard = (function(){
 		};
 		/*Takes in an x and y coordinate. Returns 
 		* block coordinate object*/
-		this.getBlockPosition = function(x, y){
-			return new Block(Math.floor(xPixelsPerBlock), Math.floor(yPixelsPerBlock));
+		this.getBlockForPosition = function(x, y){
+			return new Block(Math.floor(x/xPixelsPerBlock), Math.floor(y/yPixelsPerBlock));
 		};
 		/*Pass in x,y coordinates of two objects (or future positions)
 		* to check to see if they exist in the same block. If yes, then
 		* collision.
 		*/ 
 		this.checkBlockCollision = function(x1, y1, x2, y2){
-			var block1 = that.getBlockPosition(x1, y1);
-			var block2 = that.getBlockPosition(x2, y2);
+			var block1 = that.getBlockForPosition(x1, y1);
+			var block2 = that.getBlockForPosition(x2, y2);
 			if(block1.getXBlock() === block2.getXBlock() && block1.getYBlock === block2.getYBlock)
 				return true;
 			return false;
@@ -143,7 +125,15 @@ var GameBoard = (function(){
 		};
 		/* Block-structor */
 		var Block = (function(){
-			var constr = function(){
+			var constr = function(x, y){
+				
+				var xBlock = x;
+				var yBlock = y;
+				/*Use ranges for more control in custom collision detecting*/ 
+				var lowX = that.xPixelsPerBlock*this.getXBlock;
+				var highX = that.xPixelsPerBlock*(this.getXBlock+1);
+				var lowY = that.yPixelsPerBlock*this.getYBlock;
+				var highY = that.yPixelsPerBlock*(this.getYBlock+1);
 				this.getXBlock = (function(){
 					return xBlock;
 				}());
@@ -162,13 +152,6 @@ var GameBoard = (function(){
 				this.getHighY = (function(){
 					return highY;
 				}());
-				var xBlock = x;
-				var yBlock = y;
-				/*Use ranges for more control in custom collision detecting*/ 
-				var lowX = that.xPixelsPerBlock*this.getXBlock;
-				var highX = that.xPixelsPerBlock*(this.getXBlock+1);
-				var lowY = that.yPixelsPerBlock*this.getYBlock;
-				var highY = that.yPixelsPerBlock*(this.getYBlock+1);
 				/*Sets x and y ranges of coordinates based 
 				* on block coordinates*/
 			};
@@ -183,19 +166,23 @@ var GameBoard = (function(){
 			return (x <= width && x >= 0)&&(y <= height && y >= 0)?true:false;
 		};
 		this.views = [];
+		this.backgrounds = [];
+		this.addBackground = function(background){
+			this.backgrounds.push(utility.checkBackground(background));
+		};
 		this.addView = function (view) {
 			this.views.push(utility.checkView(view));
 		};
 		this.removeView = function (view) {
 			/* filters out the value to remove */
-			this.views = this.views.filter(function (v) {
+			that.views = that.views.filter(function (v) {
 				return !(v===view);
-			})
+			});
 		};
 		/* Calls f on all the elems of the list that pass p and implement f */
 		var apply = function (f, p, list) {
 			for (var i in list) {
-				if (p(list[i]) === true && list[i][f] != undefined && typeof list[i][f] === 'function')
+				if (p(list[i]) === list[i] && list[i][f] != undefined && typeof list[i][f] === 'function')
 					list[i][f]();
 			}
 		};
@@ -208,38 +195,106 @@ var GameBoard = (function(){
 				}
 			});
 		};
-		this.draw = function(p) {
-			apply("draw", p, this.views);
+		this.draw = function(p, list) {
+			apply("draw", p, list);
 		};
-		this.move = function(p) {
+		this.moveViews = function(p) {
 			apply("move", p, views);
 			this.views.forEach(handleCollisionsForView, this); 
 			/* ^^ Dont need to call this on every view, just the ones moved */
 		};
-		this.render = function(){
+		this.move = function(d){
+			var ctx = that.getCanvas.getContext("2d");
+			ctx.clearRect ( 0 , 0 , that.getCanvas.width , that.getCanvas.height );
+			x = control[0];
+			if(d === "U"){
+				x.sr--;
+				that.render();
+			}else if(d === "D"){
+				x.sr++;
+				that.render();
+			}else if(d === "R"){
+				x.sc++;
+				that.render();
+			}else if(d === "L"){
+				x.sc--;
+				that.render();
+			}
+		};
+		this.start = function(){
 			if(!this.isCanvasSupported){
 				alert("Canvas is not supported on your browser!");
 				return;
 			}
 			img = new Image();
 			img.onload = function(){
-				var tempViews = that.views.filter(function (v) {
-					return (v.snap);
-				});
-				tempViews.forEach(function(elem, index, array){
-					return that.snapViewToClosestRow(elem);
-				});
-				that.draw(check);
+				that.render();
+				
 			};
 			img.src = this.img;
+		};
+		this.render = function(){
+			ctx.save();
+			ctx.clearRect(0, 0, that.getCanvasWidth(), that.getCanvasHeight());
+			ctx.globalAlpha=1; 
+			var tempViews = that.views.filter(function(elem, index, array){
+				return (elem.sr != -1);
+			})
+			tempViews.forEach(snapToRow);
+			tempViews.length = 0;
+			tempViews = that.views.filter(function(elem, index, array){
+				return (elem.sc != -1);
+			});
+			tempViews.forEach(snapToCol);
+			that.draw(utility.checkBackground, that.backgrounds);
+    		ctx.restore();
+    		prerendered = true;
+			that.draw(utility.checkView, that.views);
+		}
+		var snapToRow = function(elem, index, array){
+			centerOffset = yPixelsPerBlock-elem.frame.size.height;
+			startingY = centerOffset/2;
+			elem.frame.origin.y = startingY + (yPixelsPerBlock * utility.checkInt(elem.sr));
+		};
+		var snapToCol = function(elem, index, array){
+			centerOffset = xPixelsPerBlock-elem.frame.size.height;
+			startingX = centerOffset/2;
+			elem.frame.origin.x = startingX + (xPixelsPerBlock * utility.checkInt(elem.sc));
 		};
 		var check = function(elem){
 			if(elem instanceof View) return true;
 			return false;
 		};
-		this.snapViewToClosestRow = function(view) {
-			block = that.getBlockPosition(0, 0);
-			console.log(block);
+		this.setControl = function(c){
+			control = that.views.filter(function(elem, index, array){
+				return (elem.id === c);
+			});
+		};
+		this.getControl = function(){
+			return control;
+		};
+		document.onkeydown = function(e){
+			
+			switch(utility.checkInt(e.keyCode)){
+				case 37:
+					e.preventDefault();
+					that.move("L");
+					break;
+				case 38:
+					e.preventDefault();
+					that.move("U");
+					break;
+				case 39:
+					e.preventDefault();
+					that.move("R");
+					break;
+				case 40:
+					e.preventDefault();
+					that.move("D");
+					break;
+				default:
+					break;
+			}
 		};
 	};
 	constr.context = function(){
@@ -267,18 +322,33 @@ var Size = (function(){
 
 /*View object*/
 var View = (function(){
-	var constr = function(f, o, i, s){
+	var constr = function(f, o, i, snapRow, snapCol){
 		this.frame = utility.checkFrame(f);
 		this.orient = utility.checkOrientation(o);
 		/*user identification string*/
 		this.id = i;
-		this.snap = s;
+		this.sr = snapRow;
+		this.sc = snapCol;
 		var self = this;
 		this.draw = function(){
 			GameBoard.context().drawImage(img, self.orient.tl, self.orient.tr, self.frame.size.width, 
 				self.frame.size.height, self.frame.origin.x, self.frame.origin.y, self.frame.size.width*self.orient.widthScale, 
 				self.frame.size.height*self.orient.heightScale);
 		};
+	};
+	return constr;
+}());
+
+var Background = (function(){
+	var constr = function(c, frame){
+		this.f = frame;
+		this.c = c;
+		var self = this;
+		this.draw = function(){
+			var ctx = GameBoard.context();
+			ctx.fillStyle = self.c;
+			ctx.fillRect(self.f.origin.x, self.f.origin.y, self.f.size.width, self.f.size.height);
+		}
 	};
 	return constr;
 }());
@@ -329,7 +399,7 @@ var utility = {
     },
     checkFrame : function(x){
     	if(!(x instanceof Frame))
-    		utility.error(x, "is not a Frame object");
+    		utility.error(x, "is not a Point object");
     	return x;
     },
     checkSize : function(x){
@@ -345,6 +415,11 @@ var utility = {
     checkView : function(x){
     	if(!(x instanceof View))
     		utility.error(x, "is not a View object");
+    	return x;
+    },
+    checkBackground : function(x){
+    	if(!(x instanceof Background))
+    		utility.error(x, "is not a Background object");
     	return x;
     },
     error : function(x, message){
