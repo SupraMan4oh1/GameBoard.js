@@ -5,6 +5,7 @@
  * Copyright Brendan Conron, Ilan Gray
  * Released under the MIT license.
  */
+var img;
 
 /*game board object
 * can is the canvas object
@@ -13,7 +14,6 @@
 */
 var GameBoard = (function(){
 	var constr = function(canv, x, y, image){
-		this.context = canv.getContext("2d");
 		var canvas = canv;
 		var height = canvas.height;
 		var width = canvas.width;
@@ -53,9 +53,9 @@ var GameBoard = (function(){
 			}
 		};
 		this.isCanvasSupported = canvas.getContext ? true : false;
-		this.getCanvas = function(){
+		this.getCanvas = (function(){
 			return canvas;
-		};
+		}());
 		this.getCanvasHeight = function(){
 			return height;
 		};
@@ -142,35 +142,38 @@ var GameBoard = (function(){
 			}
 		};
 		/* Block-structor */
-		this.Block = function(x, y){
-			var xBlock = x;
-			var yBlock = y;
-			/*Use ranges for more control in custom collision detecting*/ 
-			var lowX = that.xPixelsPerBlock*this.getXBlock();
-			var highX = that.xPixelsPerBlock*(this.getXBlock()+1);
-			var lowY = that.yPixelsPerBlock*this.getYBlock();
-			var highY = that.yPixelsPerBlock*(this.getYBlock()+1);
-			/*Sets x and y ranges of coordinates based 
-			* on block coordinates*/
-			this.getXBlock = function(){
-				return xBlock;
+		var Block = (function(){
+			var constr = function(){
+				this.getXBlock = (function(){
+					return xBlock;
+				}());
+				this.getYBlock = (function(){
+					return yBlock;
+				}());
+				this.getLowX = (function(){
+					return lowX;
+				}());
+				this.getHighX = (function(){
+					return highX;
+				}());
+				this.getLowY = (function(){
+					return lowY;
+				}());
+				this.getHighY = (function(){
+					return highY;
+				}());
+				var xBlock = x;
+				var yBlock = y;
+				/*Use ranges for more control in custom collision detecting*/ 
+				var lowX = that.xPixelsPerBlock*this.getXBlock;
+				var highX = that.xPixelsPerBlock*(this.getXBlock+1);
+				var lowY = that.yPixelsPerBlock*this.getYBlock;
+				var highY = that.yPixelsPerBlock*(this.getYBlock+1);
+				/*Sets x and y ranges of coordinates based 
+				* on block coordinates*/
 			};
-			this.getYBlock = function(){
-				return yBlock;
-			};
-			this.getLowX = function(){
-				return lowX;
-			};
-			this.getHighX = function(){
-				return highX;
-			};
-			this.getLowY = function(){
-				return lowY;
-			};
-			this.getHighY = function(){
-				return highY;
-			};
-		};
+		    return constr;
+		}());
 		this.originForBlock = function(x, y) {
 			if(doesExistWithinBoard(x,y))  
 				return new Point((x%xPixelsPerBlock)*xPixelsPerBlock, (y%yPixelsPerBlock)*yPixelsPerBlock);
@@ -178,9 +181,6 @@ var GameBoard = (function(){
 		};
 		var doesExistWithinBoard = function(x, y){
 			return (x <= width && x >= 0)&&(y <= height && y >= 0)?true:false;
-		};
-		this.originToCenterFrameInBlock = function(frame, x, y) {
-
 		};
 		this.views = [];
 		this.addView = function (view) {
@@ -208,12 +208,11 @@ var GameBoard = (function(){
 				}
 			});
 		};
-
 		this.draw = function(p) {
 			apply("draw", p, this.views);
 		};
 		this.move = function(p) {
-			apply(move, p, views);
+			apply("move", p, views);
 			this.views.forEach(handleCollisionsForView, this); 
 			/* ^^ Dont need to call this on every view, just the ones moved */
 		};
@@ -222,10 +221,33 @@ var GameBoard = (function(){
 				alert("Canvas is not supported on your browser!");
 				return;
 			}
+			img = new Image();
+			img.onload = function(){
+				var tempViews = that.views.filter(function (v) {
+					return (v.snap);
+				});
+				tempViews.forEach(function(elem, index, array){
+					return that.snapViewToClosestRow(elem);
+				});
+				that.draw(check);
+			};
+			img.src = this.img;
 		};
+		var check = function(elem){
+			if(elem instanceof View) return true;
+			return false;
+		};
+		this.snapViewToClosestRow = function(view) {
+			block = that.getBlockPosition(0, 0);
+			console.log(block);
+		};
+	};
+	constr.context = function(){
+		return document.getElementById("gameboard").getContext("2d");
 	};
 	return constr;
 }());
+
 /* Constructors for types used in the GameBoard */
 var Point = (function(){
 	var constr = function(x, y){
@@ -245,14 +267,17 @@ var Size = (function(){
 
 /*View object*/
 var View = (function(){
-	
-	var constr = function(f, o, i){
+	var constr = function(f, o, i, s){
 		this.frame = utility.checkFrame(f);
 		this.orient = utility.checkOrientation(o);
 		/*user identification string*/
 		this.id = i;
+		this.snap = s;
+		var self = this;
 		this.draw = function(){
-			console.log("testing");
+			GameBoard.context().drawImage(img, self.orient.tl, self.orient.tr, self.frame.size.width, 
+				self.frame.size.height, self.frame.origin.x, self.frame.origin.y, self.frame.size.width*self.orient.widthScale, 
+				self.frame.size.height*self.orient.heightScale);
 		};
 	};
 	return constr;
@@ -282,11 +307,9 @@ var Frame = (function(){
 
 /*holds sprite sheet information necessary for canvas drawing*/
 var Orientation = (function(){
-	var constr = function(topl, topr, w, h, ws, hs){
+	var constr = function(topl, topr, ws, hs){
 		this.tl = topl;
 		this.tr = topr;
-		this.width = w;
-		this.height = h;
 		this.widthScale = ws;
 		this.heightScale = hs;
 	};
