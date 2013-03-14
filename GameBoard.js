@@ -13,7 +13,6 @@ var img;
 * respectively are represented in.
 */
 var GameBoard = (function(){
-	var prerendered = false;
 	var constr = function(canv, x, y, image){
 		var canvas = canv;
 		var ctx = canvas.getContext("2d");
@@ -23,17 +22,12 @@ var GameBoard = (function(){
 		var heightBlocks = utility.checkInt(y);
 		var totalBlocks = x*y;
 		var that = this;
-		var control;
+		var control = new Array();
 		//public for this instance
+		this.rotate;
+		this.exclusionList = [];
+		this.collisionCallback;
 		this.img = image;
-		this.movePlayer = function(direction){
-			switch(direction){
-				case 'U':
-					break;
-				default:
-					break;
-			}
-		};
 		this.isCanvasSupported = canvas.getContext ? true : false;
 		this.getCanvas = (function(){
 			return canvas;
@@ -123,6 +117,180 @@ var GameBoard = (function(){
 				this.highScore = 0;
 			}
 		};
+		this.originForBlock = function(x, y) {
+			if(doesExistWithinBoard(x,y))  
+				return new Point((x%xPixelsPerBlock)*xPixelsPerBlock, (y%yPixelsPerBlock)*yPixelsPerBlock);
+			return -1;
+		};
+		var doesExistWithinBoard = function(x, y){
+			return (x <= width && x >= 0)&&(y <= height && y >= 0)?true:false;
+		};
+		this.views = [];
+		this.backgrounds = [];
+		this.addBackground = function(background){
+			this.backgrounds.push(utility.checkBackground(background));
+		};
+		this.addView = function (view) {
+			this.views.push(utility.checkView(view));
+		};
+		this.removeView = function (view) {
+			/* filters out the value to remove */
+			that.views = that.views.filter(function (v) {
+				return !(v===view);
+			});
+		};
+		/* Calls f on all the elems of the list that pass p and implement f */
+		var apply = function (f, p, list) {
+			for (var i in list) {
+				if (p(list[i]) === list[i] && list[i][f] != undefined && typeof list[i][f] === 'function')
+					list[i][f]();
+			}
+		};
+			var itemInExlusion = function(view){
+			for(var i in that.exclusionList){
+				if(that.exclusionList[i] === view.id) return true;
+			}
+			return false;
+		};
+		/* Calls the user's collision callback if the view's frame shares any 
+		   common pixels with any other frames in the GameBoard */
+		var handleCollisionsForView = function (view) {
+			that.views.forEach(function(elem, index, array) {
+				if (view.frame.hitTest(elem.frame) === true && !itemInExlusion(elem)) {
+					return that.collisionCallback(view, elem);
+				}
+			});
+		};
+		this.addToList = function(){
+			for(var i in arguments){
+				that.exclusionList.push(arguments[i]);
+			}
+		};
+		this.draw = function(p, list) {
+			apply("draw", p, list);
+		};
+		this.moveViews = function(p, list) {
+			apply("move", p, list);
+			that.views.forEach(handleCollisionsForView); 
+			/* ^^ Dont need to call this on every view, just the ones moved */
+		};
+		this.move = function(d){
+			control.forEach(that.removeView);
+			var x = control[0];
+			if(d === "U"){
+				x = control[0];
+				that.rotate = new Rotation(0, "U");
+				x.sr--;
+				adjustControl(x, "sr");
+				that.addView(x);
+				that.render();
+			}else if(d === "D"){
+				x = control[3];
+				that.rotate = new Rotation(-180, "D");
+				x.sr++;
+				adjustControl(x, "sr");
+				that.addView(x);
+				that.render();
+			}else if(d === "R"){
+				x = control[2];
+				that.rotate = new Rotation(90, "R");
+				x.sc++;
+				adjustControl(x, "sc");
+				that.addView(x);
+				that.render();
+			}else if(d === "L"){
+				x = control[1];
+				that.rotate = new Rotation(-90, "L");
+				x.sc--;
+				adjustControl(x, "sc");
+				that.addView(x);
+				that.render();
+			}
+		};
+		var adjustControl = function(elem, p){
+			for(var i in control){
+					control[i][p] = elem[p];
+			}
+		};
+		this.start = function(){
+			if(!this.isCanvasSupported){
+				alert("Canvas is not supported on your browser!");
+				return;
+			}
+			img = new Image();
+			img.onload = function(){
+				setInterval(function(){
+				that.render();
+				}, 20);
+			};
+			img.src = this.img;
+		};
+		this.render = function(){
+			ctx.save();
+			ctx.clearRect(0, 0, that.getCanvasWidth(), that.getCanvasHeight());
+			ctx.globalAlpha=1; 
+			apply("reset", utility.checkView, that.views);
+			var tempViews = that.views.filter(function(elem, index, array){
+				return (elem.sr != " ");
+			})
+			tempViews.forEach(snapToRow);
+			tempViews.length = 0;
+			tempViews = that.views.filter(function(elem, index, array){
+				return (elem.sc != " ");
+			});
+			tempViews.forEach(snapToCol);
+			that.draw(utility.checkBackground, that.backgrounds);
+    		that.moveViews(utility.checkView, that.views);
+			that.draw(utility.checkView, that.views);
+			ctx.restore();
+		};
+		var snapToRow = function(elem, index, array){
+			centerOffset = yPixelsPerBlock-elem.frame.size.height;
+			startingY = centerOffset/2;
+			elem.frame.origin.y = startingY + (yPixelsPerBlock * utility.checkInt(elem.sr));
+		};
+		var snapToCol = function(elem, index, array){
+			centerOffset = xPixelsPerBlock-elem.frame.size.height;
+			startingX = centerOffset/2;
+			elem.frame.origin.x = startingX + (xPixelsPerBlock * utility.checkInt(elem.sc));
+		};
+		var check = function(elem){
+			if(elem instanceof View) return true;
+			return false;
+		};
+		this.setControl = function(c){
+			control = that.views.filter(function(elem, index, array){
+				return (elem.id === c);
+			});
+			for(var i in control){
+				if(i != 0) that.removeView(control[i]);
+			}
+		};
+		this.getControl = function(){
+			return control;
+		};
+		document.onkeydown = function(e){
+			switch(utility.checkInt(e.keyCode)){
+				case 37:
+					e.preventDefault();
+					that.move("L");
+					break;
+				case 38:
+					e.preventDefault();
+					that.move("U");
+					break;
+				case 39:
+					e.preventDefault();
+					that.move("R");
+					break;
+				case 40:
+					e.preventDefault();
+					that.move("D");
+					break;
+				default:
+					break;
+			}
+		};
 		/* Block-structor */
 		var Block = (function(){
 			var constr = function(x, y){
@@ -157,145 +325,9 @@ var GameBoard = (function(){
 			};
 		    return constr;
 		}());
-		this.originForBlock = function(x, y) {
-			if(doesExistWithinBoard(x,y))  
-				return new Point((x%xPixelsPerBlock)*xPixelsPerBlock, (y%yPixelsPerBlock)*yPixelsPerBlock);
-			return -1;
-		};
-		var doesExistWithinBoard = function(x, y){
-			return (x <= width && x >= 0)&&(y <= height && y >= 0)?true:false;
-		};
-		this.views = [];
-		this.backgrounds = [];
-		this.addBackground = function(background){
-			this.backgrounds.push(utility.checkBackground(background));
-		};
-		this.addView = function (view) {
-			this.views.push(utility.checkView(view));
-		};
-		this.removeView = function (view) {
-			/* filters out the value to remove */
-			that.views = that.views.filter(function (v) {
-				return !(v===view);
-			});
-		};
-		/* Calls f on all the elems of the list that pass p and implement f */
-		var apply = function (f, p, list) {
-			for (var i in list) {
-				if (p(list[i]) === list[i] && list[i][f] != undefined && typeof list[i][f] === 'function')
-					list[i][f]();
-			}
-		};
-		/* Calls the user's collision callback if the view's frame shares any 
-		   common pixels with any other frames in the GameBoard */
-		var handleCollisionsForView = function (view) {
-			views.forEach(function(elem, index, array) {
-				if (view.frame.hitTest(elem) == true) {
-					return this.collisionCallback(view, elem);
-				}
-			});
-		};
-		this.draw = function(p, list) {
-			apply("draw", p, list);
-		};
-		this.moveViews = function(p) {
-			apply("move", p, views);
-			this.views.forEach(handleCollisionsForView, this); 
-			/* ^^ Dont need to call this on every view, just the ones moved */
-		};
-		this.move = function(d){
-			var ctx = that.getCanvas.getContext("2d");
-			ctx.clearRect ( 0 , 0 , that.getCanvas.width , that.getCanvas.height );
-			x = control[0];
-			if(d === "U"){
-				x.sr--;
-				that.render();
-			}else if(d === "D"){
-				x.sr++;
-				that.render();
-			}else if(d === "R"){
-				x.sc++;
-				that.render();
-			}else if(d === "L"){
-				x.sc--;
-				that.render();
-			}
-		};
-		this.start = function(){
-			if(!this.isCanvasSupported){
-				alert("Canvas is not supported on your browser!");
-				return;
-			}
-			img = new Image();
-			img.onload = function(){
-				that.render();
-				
-			};
-			img.src = this.img;
-		};
-		this.render = function(){
-			ctx.save();
-			ctx.clearRect(0, 0, that.getCanvasWidth(), that.getCanvasHeight());
-			ctx.globalAlpha=1; 
-			var tempViews = that.views.filter(function(elem, index, array){
-				return (elem.sr != -1);
-			})
-			tempViews.forEach(snapToRow);
-			tempViews.length = 0;
-			tempViews = that.views.filter(function(elem, index, array){
-				return (elem.sc != -1);
-			});
-			tempViews.forEach(snapToCol);
-			that.draw(utility.checkBackground, that.backgrounds);
-    		ctx.restore();
-    		prerendered = true;
-			that.draw(utility.checkView, that.views);
-		}
-		var snapToRow = function(elem, index, array){
-			centerOffset = yPixelsPerBlock-elem.frame.size.height;
-			startingY = centerOffset/2;
-			elem.frame.origin.y = startingY + (yPixelsPerBlock * utility.checkInt(elem.sr));
-		};
-		var snapToCol = function(elem, index, array){
-			centerOffset = xPixelsPerBlock-elem.frame.size.height;
-			startingX = centerOffset/2;
-			elem.frame.origin.x = startingX + (xPixelsPerBlock * utility.checkInt(elem.sc));
-		};
-		var check = function(elem){
-			if(elem instanceof View) return true;
-			return false;
-		};
-		this.setControl = function(c){
-			control = that.views.filter(function(elem, index, array){
-				return (elem.id === c);
-			});
-		};
-		this.getControl = function(){
-			return control;
-		};
-		document.onkeydown = function(e){
-			
-			switch(utility.checkInt(e.keyCode)){
-				case 37:
-					e.preventDefault();
-					that.move("L");
-					break;
-				case 38:
-					e.preventDefault();
-					that.move("U");
-					break;
-				case 39:
-					e.preventDefault();
-					that.move("R");
-					break;
-				case 40:
-					e.preventDefault();
-					that.move("D");
-					break;
-				default:
-					break;
-			}
-		};
+	};
+	constr.canv = function(){
+		return document.getElementById('gameboard');
 	};
 	constr.context = function(){
 		return document.getElementById("gameboard").getContext("2d");
@@ -306,8 +338,8 @@ var GameBoard = (function(){
 /* Constructors for types used in the GameBoard */
 var Point = (function(){
 	var constr = function(x, y){
-		this.x = utility.checkInt(x);
-		this.y = utility.checkInt(y);
+		this.x = utility.checkNum(x);
+		this.y = utility.checkNum(y);
 	};
 	return constr;
 }());
@@ -322,19 +354,49 @@ var Size = (function(){
 
 /*View object*/
 var View = (function(){
-	var constr = function(f, o, i, snapRow, snapCol){
+	var constr = function(f, o, i, snapRow, snapCol, v){
 		this.frame = utility.checkFrame(f);
 		this.orient = utility.checkOrientation(o);
 		/*user identification string*/
 		this.id = i;
 		this.sr = snapRow;
 		this.sc = snapCol;
+		this.v = v;
 		var self = this;
 		this.draw = function(){
 			GameBoard.context().drawImage(img, self.orient.tl, self.orient.tr, self.frame.size.width, 
 				self.frame.size.height, self.frame.origin.x, self.frame.origin.y, self.frame.size.width*self.orient.widthScale, 
 				self.frame.size.height*self.orient.heightScale);
 		};
+		this.move = function(){
+			if(self.v != undefined){
+				if(self.v.d === "R"){
+					self.sc = " ";
+					self.frame.origin.x += self.v.s;
+				}
+				if(self.v.d === "L"){
+					self.sc = " ";
+					self.frame.origin.x -= self.v.s;
+				}
+			}
+		};
+		this.reset = function(){
+			if(v != undefined){
+				if(self.v.d === "R"){
+					if(self.frame.origin.x > GameBoard.canv().width){
+						self.frame.origin.x = -500;
+					}
+				}
+			}
+		};
+	};
+	return constr;
+}());
+
+var Velocity = (function(){
+	var constr = function(d, s){
+		this.d = d;
+		this.s = s;
 	};
 	return constr;
 }());
@@ -360,6 +422,7 @@ var Frame = (function(){
 		this.lr = (function(){
 			return utility.checkPoint(new Point(origin.x + size.width, origin.y + size.height));
 		}());
+		var  self = this;
 		/* Returns true if the two frames share any common pixels */
 		this.hitTest = function (frame) {
 			var isInInterval = function (x, min, max) {
@@ -368,8 +431,8 @@ var Frame = (function(){
 			var containsPoint = function (frame, p) {
 				return (isInInterval(p.x, frame.origin.x, frame.lr.x) && isInInterval(p.y, frame.origin.y, frame.lr.y));
 			};
-			return containsPoint(this, frame.origin) || containsPoint(this, frame.lr) || 
-				   containsPoint(this, new Point(frame.origin.x, frame.lr.y)) || containsPoint(this, new Point(frame.lr.x, frame.origin.y));
+			return containsPoint(self, frame.origin) || containsPoint(self, frame.lr) || 
+				   containsPoint(self, new Point(frame.origin.x, frame.lr.y)) || containsPoint(self, new Point(frame.lr.x, frame.origin.y));
 		};
 	};
 	return constr;
@@ -386,11 +449,22 @@ var Orientation = (function(){
 	return constr;
 }());
 
+var Rotation = (function(){
+	var constr = function(r, d){
+		this.r = r;
+		this.d = d;
+	};
+})
 var utility = {
 	checkInt : function(x) { 
         if (x % 1 !== 0) 
     		utility.error(x, "is not an integer");
         return x;
+    },
+    checkNum : function(x){
+    	if(!(typeof x === 'number'))
+    		utility.error(x, "is not a number");
+    	return x;
     },
     checkPoint : function(x){
     	if(!(x instanceof Point))
