@@ -23,9 +23,40 @@ var GameBoard = (function(){
 		var totalBlocks = x*y;
 		var that = this;
 		var control = new Array();
+		var movingCounter = 0;
 		//public for this instance
+		this.moveSound = true;
+		this.isDeath = false;
+		this.deathImage = new Image();
+		this.deathFile;
+		this.soundFile;
 		this.rotate;
+		this.lives;
+		this.deathHandler;
+		this.deaths = 0;
+		this.blockCallback = false;
+		this.originalViewsState = [];
+		this.originalMovableState = [];
 		this.exclusionList = [];
+		this.movableSet = [];
+		this.needsUpdate = false;
+		this.deathFun = function(){
+			ctx.drawImage(that.deathImage, 0, 0, 30, 30, control[0].frame.origin.x, control[0].frame.origin.y, 100, 100);
+		};
+		this.doneAddingMoveSet = function(){
+			addMovingElement(that.movableSet, function(){
+				that.movableSet.length = 0;
+			});
+		};
+		this.resetPlayerPiece = function(r, c){
+			control.forEach(function(elem, index, array){
+				elem.sr = r;
+				elem.sc = c;
+				elem.v = undefined;
+			});
+		};
+		this.runtimeFunctions = [];
+		this.movingElements = [];
 		this.collisionCallback;
 		this.img = image;
 		this.isCanvasSupported = canvas.getContext ? true : false;
@@ -59,13 +90,17 @@ var GameBoard = (function(){
 			heightBlocks = hb;
 		};
 		/*variables and methods relating to the number of pixels per block*/
-		var xPixelsPerBlock = this.getCanvasWidth()/this.getWidthBlocks();
-		var yPixelsPerBlock = this.getCanvasHeight()/this.getHeightBlocks();
+		var xPixelsPerBlock = function(){
+			return that.getCanvasWidth()/that.getWidthBlocks();
+		};
+		var yPixelsPerBlock = function(){
+			return that.getCanvasHeight()/that.getHeightBlocks();
+		};
 		this.getXPixelsPerBlock = function(){
-			return xPixelsPerBlock;
+			return xPixelsPerBlock();
 		};
 		this.getYPixelsPerBlock = function(){
-			return yPixelsPerBlock;
+			return yPixelsPerBlock();
 		};
 		/*Resize the canvas. X and Y are new dimensions in pixels. 
 		* If percent == true, X and Y are treated as percents and the
@@ -77,7 +112,7 @@ var GameBoard = (function(){
 		/*Takes in an x and y coordinate. Returns 
 		* block coordinate object*/
 		this.getBlockForPosition = function(x, y){
-			return new Block(Math.floor(x/xPixelsPerBlock), Math.floor(y/yPixelsPerBlock));
+			return new Block(Math.floor(x/xPixelsPerBlock()), Math.floor(y/yPixelsPerBlock()));
 		};
 		/*Pass in x,y coordinates of two objects (or future positions)
 		* to check to see if they exist in the same block. If yes, then
@@ -114,12 +149,11 @@ var GameBoard = (function(){
 		this.score = {
 			init: function(){
 				this.points = 0;
-				this.highScore = 0;
 			}
 		};
 		this.originForBlock = function(x, y) {
 			if(doesExistWithinBoard(x,y))  
-				return new Point((x%xPixelsPerBlock)*xPixelsPerBlock, (y%yPixelsPerBlock)*yPixelsPerBlock);
+				return new Point((x%xPixelsPerBlock())*xPixelsPerBlock(), (y%yPixelsPerBlock())*yPixelsPerBlock());
 			return -1;
 		};
 		var doesExistWithinBoard = function(x, y){
@@ -139,6 +173,10 @@ var GameBoard = (function(){
 				return !(v===view);
 			});
 		};
+		var addMovingElement = function(array, callback){
+			that.movingElements.push(array.slice(0));
+			callback();
+		};
 		/* Calls f on all the elems of the list that pass p and implement f */
 		var apply = function (f, p, list) {
 			for (var i in list) {
@@ -152,15 +190,32 @@ var GameBoard = (function(){
 			}
 			return false;
 		};
+		/*used to compare two views to see if they hit. Only for users ease*/
 		/* Calls the user's collision callback if the view's frame shares any 
 		   common pixels with any other frames in the GameBoard */
 		var handleCollisionsForView = function (view) {
 			that.views.forEach(function(elem, index, array) {
-				if (view.frame.hitTest(elem.frame) === true && itemInExlusion(utility.checkView(elem)) === false){
+				if (view.frame.hitTest(elem.frame) === true && itemInExlusion(utility.checkView(elem)) === false && view != elem){
 					return that.collisionCallback(view, elem);
 				}
 			});
 		};
+		this.retrieveViews = function(id){
+			var temp = [];
+			for(var i in that.views){
+				if(that.views[i].id === id){
+					temp.push(that.views[i]);
+				}
+			}
+			for(var i in that.movingElements){
+				for(var j in that.movingElements[i]){
+					if(that.movingElements[i][j].v.id === id){
+						temp.push(that.movingElements[i][j].v);
+					}
+				}
+			}
+			return temp;
+		}
 		this.addToList = function(){
 			for(var i in arguments){
 				that.exclusionList.push(arguments[i]);
@@ -172,40 +227,83 @@ var GameBoard = (function(){
 		this.moveViews = function(p, list) {
 			apply("move", p, list);
 			that.views.forEach(handleCollisionsForView); 
-			/* ^^ Dont need to call this on every view, just the ones moved */
+			for(var i in that.movingElements){
+				for(var j in that.movingElements[i]){
+					handleCollisionsForView(that.movingElements[i][j].v);
+				}
+			}
+		};
+		/*finds the cloest row to a given frame*/
+		var findClosestRow = function(frame){
+			var p = frame.c();
+			var b = that.getBlockForPosition(p.x, p.y);
+			return b.getYBlock();
+		};
+		var findClosestCol = function(frame){
+			var p = frame.c();
+			var b = that.getBlockForPosition(p.x, p.y);
+			return b.getXBlock();
 		};
 		this.move = function(d){
+			if(that.moveSound){
+				var body = document.getElementById('game_div');
+				var first = body.firstChild;
+				var elem = document.createElement("audio");
+				elem.id = "audio_tag";
+				elem.setAttribute('autoplay','autoplay');
+				elem.innerHTML = '<source src="assets/frogger_hop.wav" type="audio/wav">';
+				body.insertBefore(elem, first);
+			}
 			control.forEach(that.removeView);
 			var x = control[0];
 			if(d === "U"){
 				x = control[0];
+				if(x.v != undefined || x.v != null){
+					if(x.sr === "-") x.sr = findClosestRow(x.frame);
+					if(x.sc === "-") x.sc = findClosestCol(x.frame);
+					delete x.v;
+				}
 				that.rotate = new Rotation(0, "U"); //Rotations will be used in future development
-				x.sr--;
+				if(x.sr-1 >= 0)
+					x.sr--;
 				adjustControl(x, "sr");
 				that.addView(x);
-				that.render();
 			}else if(d === "D"){
 				x = control[3];
+				if(x.v != undefined || x.v != null){
+					if(x.sr === "-") x.sr = findClosestRow(x.frame);
+					if(x.sc === "-") x.sc = findClosestCol(x.frame);
+					delete x.v;
+				}
 				that.rotate = new Rotation(-180, "D");
-				x.sr++;
+				if(x.sr+1 <= that.getHeightBlocks()-1)
+					x.sr++;
 				adjustControl(x, "sr");
 				that.addView(x);
-				that.render();
 			}else if(d === "R"){
 				x = control[2];
+				if(x.v != undefined || x.v != null){
+					if(x.sr === "-") x.sr = findClosestRow(x.frame);
+					if(x.sc === "-") x.sc = findClosestCol(x.frame);
+					delete x.v;
+				}
 				that.rotate = new Rotation(90, "R");
 				x.sc++;
 				adjustControl(x, "sc");
 				that.addView(x);
-				that.render();
 			}else if(d === "L"){
 				x = control[1];
+				if(x.v != undefined || x.v != null){
+					if(x.sr === "-") x.sr = findClosestRow(x.frame);
+					if(x.sc === "-") x.sc = findClosestCol(x.frame);
+					delete x.v;
+				}
 				that.rotate = new Rotation(-90, "L");
 				x.sc--;
 				adjustControl(x, "sc");
 				that.addView(x);
-				that.render();
 			}
+			that.render();
 		};
 		var adjustControl = function(elem, p){
 			for(var i in control){
@@ -218,50 +316,139 @@ var GameBoard = (function(){
 				alert("Canvas is not supported on your browser!");
 				return;
 			}
+			that.deathImage.src = that.deathFile;
+			that.originalViewsState = that.views.slice(0);
+			that.originalMovableState = that.movingElements.slice(0);
 			img = new Image();
 			img.onload = function(){
 				setInterval(function(){
 				that.render();
-				}, 20);
+				},30);
 			};
 			img.src = this.img;
 		};
+		var isGameOver = function(){
+			return that.deaths === that.lives;
+		};
+		var updateUILives = function(){
+			var counter = 0;
+			for(var i = 0; i < that.views.length; i++){
+				if(that.views[i].id === "life") counter++;
+			}
+			var livesLeft = that.lives - that.deaths;
+			var i = 0;
+			while(counter >= livesLeft){
+				if(that.views[i].id === "life"){
+					counter--;
+					that.removeView(that.views[i]);
+				}
+				i++;
+			}
+		};
 		this.render = function(){
 			ctx.save();
-			ctx.clearRect(0, 0, that.getCanvasWidth(), that.getCanvasHeight());
-			//ctx.globalAlpha=1; 
-			apply("reset", utility.checkView, that.views);
-			var tempViews = that.views.filter(function(elem, index, array){
-				return (elem.sr != "-");
-			});
-			tempViews.forEach(snapToRow);
-			tempViews.length = 0;
-			tempViews = that.views.filter(function(elem, index, array){
-				return (elem.sc != "-");
-			});
-			tempViews.forEach(snapToCol);
-			that.draw(utility.checkBackground, that.backgrounds);
-    		that.moveViews(utility.checkView, that.views);
-			that.draw(utility.checkView, that.views);
-			ctx.restore();
+			if(!isGameOver()){
+				ctx.clearRect(0, 0, that.getCanvasWidth(), that.getCanvasHeight());
+				updateUILives();
+				apply("reset", utility.checkView, that.views);
+				for(var i in that.movingElements)
+					apply('reset', utility.checkMovable, that.movingElements[i]);
+				var tempViews = that.views.filter(function(elem, index, array){
+					return (elem.sr != "-");
+				});
+				tempViews.forEach(snapToRow);
+				tempViews.length = 0;
+				tempViews = that.views.filter(function(elem, index, array){
+					return (elem.sc != "-");
+				});
+				tempViews.forEach(snapToCol);
+				tempViews.length = 0;
+				that.movingElements.forEach(function(elem, index, array){
+					for(var i in elem){
+						tempViews = elem.filter(function(e, i, a){
+							return (e.v.sr != "-");
+						});
+						for(var j in tempViews){
+							snapToRow(tempViews[j].v, j, tempViews);
+						}
+						tempViews.length = 0;
+						tempViews = elem.filter(function(e, i, a){
+							return (e.v.sc != "-");
+						});
+						for(var j in tempViews){
+							snapToCol(tempViews[j].v, j, tempViews);
+						}
+						tempViews.length = 0;
+					}
+				});
+				that.draw(utility.checkBackground, that.backgrounds);
+	    		that.moveViews(utility.checkView, that.views);
+	    		for(var i in that.movingElements)
+	    			that.moveViews(utility.checkMovable, that.movingElements[i]);
+				for(var i in that.movingElements)
+					that.draw(utility.checkMovable, that.movingElements[i]);
+				that.draw(utility.checkView, that.views);
+				movingCounter > 20 ? movingCounter = 0:movingCounter++;
+				if(movingCounter === 20)
+					adjustActive();
+				ctx.restore();
+				for(var i in that.runtimeFunctions){
+					if(typeof that.runtimeFunctions[i] === 'function'){
+						that.runtimeFunctions[i]();
+					}
+				}
+				ctx.lineWidth=1;
+				ctx.fillStyle="#CC00FF";
+				ctx.lineStyle="#ffff00";
+				ctx.font="18px sans-serif";
+				ctx.fillText("Score: " + that.score.points, 0, that.getCanvasHeight() - 25);
+				if(that.needsUpdate){
+					for(var i in that.views){
+						if(that.views[i].id === "winFrog") that.removeView(that.views[i]);
+					}
+					that.needsUpdate = false;
+				}
+				if(that.isDeath) that.deathFun();
+			}else{
+				ctx.lineWidth = 10;
+				ctx.fillStyle = "white";
+				ctx.font = "50px comic-sans";
+				ctx.fillText("GAME OVER", 60, that.getCanvasHeight()/2)
+			}
+		};
+		var adjustActive = function(){
+			for(var i = 0; i < that.movingElements.length; i++){
+				for(var j = 0; j < that.movingElements[i].length; j++){
+					if(that.movingElements[i][j].c === true){
+						that.movingElements[i][j].c = false; 
+						if(j+1 < that.movingElements[i].length){
+							that.movingElements[i][j+1].c = true;
+						}
+						else{
+							that.movingElements[i][0]["c"] = true;
+						}
+						break;
+					}
+				}
+			}
 		};
 		var snapToRow = function(elem, index, array){
 			if(elem.sr === "c"){
 				elem.frame.origin.y = (height/2) - (elem.frame.size.height/2);
 				return;
 			}
-			centerOffset = yPixelsPerBlock-elem.frame.size.height;
+			centerOffset = yPixelsPerBlock()-elem.frame.size.height;
 			startingY = centerOffset/2;
-			elem.frame.origin.y = startingY + (yPixelsPerBlock * utility.checkInt(elem.sr));
+			elem.frame.origin.y = startingY + (yPixelsPerBlock() * utility.checkInt(elem.sr));
 		};
 		var snapToCol = function(elem, index, array){
 			if(elem.sc === "c"){
 				elem.frame.origin.x = (width/2) - (elem.frame.size.width/2);
 				return;
 			}
-			centerOffset = xPixelsPerBlock-elem.frame.size.height;
+			centerOffset = xPixelsPerBlock()-elem.frame.size.height;
 			startingX = centerOffset/2;
-			elem.frame.origin.x = startingX + (xPixelsPerBlock * utility.checkInt(elem.sc));
+			elem.frame.origin.x = startingX + (xPixelsPerBlock() * utility.checkInt(elem.sc));
 		};
 		var check = function(elem){
 			if(elem instanceof View) return true;
@@ -276,6 +463,9 @@ var GameBoard = (function(){
 		};
 		this.getControl = function(){
 			return control;
+		};
+		var distance = function(point1, point2){
+			return Math.sqrt(Math.pow((point2.x - point1.x), 2) + Math.pow((point2.y - point2.y), 2));
 		};
 		document.onkeydown = function(e){
 			switch(utility.checkInt(e.keyCode)){
@@ -302,32 +492,39 @@ var GameBoard = (function(){
 		/* Block-structor */
 		var Block = (function(){
 			var constr = function(x, y){
-				
 				var xBlock = x;
 				var yBlock = y;
 				/*Use ranges for more control in custom collision detecting*/ 
-				var lowX = that.xPixelsPerBlock*this.getXBlock;
-				var highX = that.xPixelsPerBlock*(this.getXBlock+1);
-				var lowY = that.yPixelsPerBlock*this.getYBlock;
-				var highY = that.yPixelsPerBlock*(this.getYBlock+1);
-				this.getXBlock = (function(){
+				var lowX = function(){
+					return xPixelsPerBlock()*this.getXBlock();
+				};
+				var highX = function(){
+					return xPixelsPerBlock()*(this.getXBlock+1);
+				}
+				var lowY = function(){
+					return yPixelsPerBlock()*this.getYBlock();
+				};
+				var highY = function(){
+					return yPixelsPerBlock()*(this.getYBlock+1);
+				};
+				this.getXBlock = function(){
 					return xBlock;
-				}());
-				this.getYBlock = (function(){
+				};
+				this.getYBlock = function(){
 					return yBlock;
-				}());
-				this.getLowX = (function(){
-					return lowX;
-				}());
-				this.getHighX = (function(){
-					return highX;
-				}());
-				this.getLowY = (function(){
-					return lowY;
-				}());
-				this.getHighY = (function(){
-					return highY;
-				}());
+				};
+				this.getLowX = function(){
+					return lowX();
+				};
+				this.getHighX = function(){
+					return highX();
+				};
+				this.getLowY = function(){
+					return lowY();
+				};
+				this.getHighY = function(){
+					return highY();
+				};
 				/*Sets x and y ranges of coordinates based 
 				* on block coordinates*/
 			};
@@ -344,153 +541,177 @@ var GameBoard = (function(){
 }());
 
 /* Constructors for types used in the GameBoard */
-var Point = (function(){
-	var constr = function(x, y){
-		this.x = utility.checkNum(x);
-		this.y = utility.checkNum(y);
-	};
-	return constr;
-}());
+function Point(x, y){
+	this.x = utility.checkNum(x);
+	this.y = utility.checkNum(y);
+};
 
-var Size = (function(){
-	var constr = function(width, height){
-		this.width = utility.checkInt(width);
-		this.height = utility.checkInt(height);
-	};
-	return constr;
-}());
+function Size(width, height){
+	this.width = utility.checkInt(width);
+	this.height = utility.checkInt(height);
+};
 
 /*View object*/
-var View = (function(){
-	var constr = function(f, o, i, snapRow, snapCol, v){
-		this.frame = utility.checkFrame(f);
-		this.orient = utility.checkOrientation(o);
-		/*user identification string*/
-		this.id = i;
-		this.sr = snapRow;
-		this.sc = snapCol;
-		this.v = v;
-		var self = this;
-		var adjustForScale = (function(){
-			self.frame.size.width *= self.orient.widthScale;
-			self.frame.size.height *= self.orient.heightScale;
-		}());
-		this.draw = function(){
-			GameBoard.context().drawImage(img, self.orient.tl, self.orient.tr, self.orient.dw, 
-				self.orient.dh, self.frame.origin.x, self.frame.origin.y, self.frame.size.width, 
-				self.frame.size.height*self.orient.heightScale);
-		};
-		this.move = function(){
-			if(self.v != undefined){
-				if(self.v.d === "R"){
-					self.sc = "-";
-					self.frame.origin.x += self.v.s;
-				}
-				if(self.v.d === "L"){
-					self.sc = "-";
-					self.frame.origin.x -= self.v.s;
-				}
-			}
-		};
-		this.reset = function(){
-			if(v != undefined){
-				if(self.v.d === "R"){
-					if(self.frame.origin.x > GameBoard.canv().width){
-						self.frame.origin.x = -500;
-					}
-				}
-				if(self.v.d === "L"){
-					if(self.frame.tr < GameBoard.canv().width){
-						self.frame.origin.x = GameBoard.canv().width + 400;
-					}
-				}
-			}
-		};
-	};
-	return constr;
-}());
-
-var Velocity = (function(){
-	var constr = function(d, s){
-		this.d = d;
-		this.s = s;
-	};
-	return constr;
-}());
-
-var Background = (function(){
-	var constr = function(c, frame){
-		this.f = frame;
-		this.c = c;
-		var self = this;
-		this.draw = function(){
-			var ctx = GameBoard.context();
-			ctx.fillStyle = self.c;
-			ctx.fillRect(self.f.origin.x, self.f.origin.y, self.f.size.width, self.f.size.height);
+View.prototype.draw = function(){
+	GameBoard.context().drawImage(img, this.orient.tl, this.orient.tr, this.orient.dw, 
+				this.orient.dh, this.frame.origin.x, this.frame.origin.y, this.frame.size.width, 
+				this.frame.size.height);
+};
+View.prototype.move = function(){
+	if(this.v != undefined){
+		if(this.v.d === "R"){
+			this.sc = "-";
+			this.frame.origin.x += this.v.s;
 		}
-	};
-	return constr;
-}());
+		if(this.v.d === "L"){
+			this.sc = "-";
+			this.frame.origin.x -= this.v.s;
+		}
+	}
+};
 
-var Frame = (function(){
-	var constr = function(origin, size){
-		this.origin = utility.checkPoint(origin);
-		this.size = utility.checkSize(size);
-		var self = this;
-		this.lr = function(){
-			return utility.checkPoint(new Point(self.origin.x + self.size.width, self.origin.y + self.size.height));
-		};
-		this.tr = function(){
-			return utility.checkPoint(new Point(self.origin.x + self.size.width, self.origin.y));
-		};
-		this.ll = function(){
-			return utility.checkPoint(new Point(self.origin.x, self.origin.y + self.size.height));
-		};
-		/* Returns true if the two frames share any common pixels */
-		this.hitTest = function (frame) {
-			/*var isInInterval = function (x, min, max) {
-				return (x >= min && x <= max);
-			};
-			var containsPoint = function (frame, p) {
-				return (isInInterval(p.x, frame.origin.x, frame.lr.x) && isInInterval(p.y, frame.origin.y, frame.lr.y));
-			};
-			return containsPoint(self, frame.origin) || containsPoint(self, frame.lr) || 
-				   containsPoint(self, new Point(frame.origin.x, frame.lr.y)) || containsPoint(self, new Point(frame.lr.x, frame.origin.y));*/
-			var isInXBounds = function(p){
-				return (p.x >= self.origin.x && p.x <= self.tr.x);
-			};
-			var isInYBounds = function(p){
-				return (p.y >= self.origin.y && p.y <= self.lr.y);
-			};
-			var isContained = function(p){
-				return (isInXBounds(p) && isInYBounds(p));
-			};
-			return isContained(frame.origin) || isContained(frame.tr) || isContained(frame.lr) || isContained(frame.ll);
-		};
+View.prototype.reset = function(){
+	if(this.v != undefined){
+		if(this.v.d === "R"){
+			if(this.frame.origin.x > GameBoard.canv().width){
+				this.frame.origin.x = -this.frame.size.width - 50;
+			}
+		}
+		if(this.v.d === "L"){
+			if(this.frame.tr().x < 0){
+					this.frame.origin.x = GameBoard.canv().width + this.frame.size.width + 50;
+			}
+		}
+	}
+};
+View.prototype.adjustForScale = function(){
+	this.frame.size.width *= this.orient.widthScale;
+	this.frame.size.height *= this.orient.heightScale;
+};
+
+function View(f, o, i, snapRow, snapCol, v){
+	this.frame = utility.checkFrame(f);
+	this.orient = utility.checkOrientation(o);
+	/*user identification string*/
+	this.id = i;
+	this.sr = snapRow;
+	this.sc = snapCol;
+	this.v = v;
+	this.adjustForScale();
+};
+		
+function Velocity(d, s){
+	this.d = d;
+	this.s = s;
+};
+
+Background.prototype.draw = function(){
+	var ctx = GameBoard.context();
+	ctx.fillStyle = this.c;
+	ctx.fillRect(this.f.origin.x, this.f.origin.y, this.f.size.width, this.f.size.height);
+};
+
+function Background(c, frame){
+	this.f = frame;
+	this.c = c;
+
+};
+
+Frame.prototype.lr = function(){
+	return utility.checkPoint(new Point(this.origin.x + this.size.width, this.origin.y + this.size.height));
+};
+
+Frame.prototype.tr = function(){
+	return utility.checkPoint(new Point(this.origin.x + this.size.width, this.origin.y));
+};
+
+Frame.prototype.ll = function(){
+	return utility.checkPoint(new Point(this.origin.x, this.origin.y + this.size.height));
+};
+
+Frame.prototype.c = function(){
+	return utility.checkPoint(new Point(this.origin.x + (this.size.width/2), this.origin.y + (this.size.height/2)));
+};
+
+Frame.prototype.hitTest = function(frame){
+	var that = this;
+	var isInXBounds = function(p){
+		return (p.x >= that.origin.x && p.x <= that.tr().x);
 	};
-	return constr;
-}());
+	var isInYBounds = function(p){
+		return (p.y >= that.origin.y && p.y <= that.lr().y);
+	};
+	var isContained = function(p){
+		return (isInXBounds(p) && isInYBounds(p));
+	};
+	var doesOverlap = function(f){
+		return ((f.origin.y <= that.origin.y && f.ll().y >= that.ll().y) && (f.origin.x >= that.origin.x && f.tr().x <= that.tr().x));
+	};
+	return isContained(frame.origin) || isContained(frame.tr()) || isContained(frame.lr()) || isContained(frame.ll()) || isContained(frame.c())
+	|| isContained(frame.c)|| doesOverlap(frame);
+};
+
+function Frame(origin, size){
+	this.origin = utility.checkPoint(origin);
+	this.size = utility.checkSize(size);
+};
 
 /*holds sprite sheet information necessary for canvas drawing*/
-var Orientation = (function(){
-	var constr = function(topl, topr, drawWidth, drawHeight, ws, hs){
-		this.tl = topl;
-		this.tr = topr;
-		this.dw = drawWidth;
-		this.dh = drawHeight;
-		this.widthScale = ws;
-		this.heightScale = hs;
-	};
-	return constr;
-}());
+function Orientation(topl, topr, drawWidth, drawHeight, ws, hs){
+	this.tl = topl;
+	this.tr = topr;
+	this.dw = drawWidth;
+	this.dh = drawHeight;
+	this.widthScale = ws;
+	this.heightScale = hs;
+};
 
-var Rotation = (function(){
-	var constr = function(r, d){
-		this.r = r;
-		this.d = d;
-	};
-	return constr;
-}());
+function Rotation(r, d){
+	this.r = r;
+	this.d = d;
+};
+
+/*canvas objects that aren't just static images being redrawn but consist of 2 or more subviews to vary their moving*/
+Movable.prototype.draw = function(){
+	if(this.c === true){
+		GameBoard.context().drawImage(img, this.v.orient.tl, this.v.orient.tr, this.v.orient.dw, 
+		this.v.orient.dh, this.v.frame.origin.x, this.v.frame.origin.y, this.v.frame.size.width, 
+		this.v.frame.size.height);
+	}
+};
+
+Movable.prototype.move = function(){
+	if(this.v.v != undefined){
+		if(this.v.v.d === "R"){
+			this.v.sc = "-";
+			this.v.frame.origin.x += this.v.v.s;
+		}
+		if(this.v.v.d === "L"){
+			this.v.sc = "-";
+			this.v.frame.origin.x -= this.v.v.s;
+		}
+	}
+};
+
+Movable.prototype.reset = function(){
+	if(this.v.v != undefined){
+		if(this.v.v.d === "R"){
+			if(this.v.frame.origin.x > GameBoard.canv().width){
+				this.v.frame.origin.x = -this.v.frame.size.width - 50;
+			}
+		}
+		if(this.v.v.d === "L"){
+			if(this.v.frame.tr().x < 0){
+				this.v.frame.origin.x = GameBoard.canv().width + this.v.frame.size.width + 50;
+			}
+		}
+	}
+};
+
+function Movable(v, c){
+	this.v = v;
+	this.c = c;
+};
 
 var utility = {
 	checkInt : function(x) { 
@@ -531,6 +752,11 @@ var utility = {
     checkBackground : function(x){
     	if(!(x instanceof Background))
     		utility.error(x, "is not a Background object");
+    	return x;
+    },
+    checkMovable : function(x){
+    	if(!(x instanceof Movable))
+    		utility.error(x, "is not a Movable object");
     	return x;
     },
     error : function(x, message){
