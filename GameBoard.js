@@ -47,7 +47,8 @@ GameBoard.prototype.drawCurves = function(num){
 /*View your canvas divided up into rows and columns*/
 GameBoard.prototype.visualize = function(){
 	var c;
-	arguments.length === 1 ? c = arguments[0] : c = "#000000";
+	if(arguments.length === 2) fillGrid(arguments[2]);
+	arguments.length >= 1 ? c = arguments[0] : c = "#000000";
 	var ctx = this.context();
 	for(var i = 0; i < this.cols; i++){
 		ctx.beginPath();
@@ -63,6 +64,15 @@ GameBoard.prototype.visualize = function(){
     	ctx.lineTo(this.canvas().width, i*(this.canvas().height/this.rows));
     	ctx.closePath();
     	ctx.stroke();
+	}
+};
+
+var fillGrid = function(c){
+	var ctx = this.context();
+	for(var i = 0; i < this.rows; i++){
+		for(var j = 0; j < this.cols; j++){
+			//fill grid drawing here
+		}
 	}
 };
 
@@ -85,18 +95,22 @@ function View(){
 
 /*Frame Object Methods*/
 
+/*Returns the coordinates of the top right corner*/
 Frame.prototype.tr = function(){
 	return new Point(this.origin.x + this.size.w, this.origin.y);
 };
 
+/*Returns the coordinates for the lower right corner*/
 Frame.prototype.lr = function(){
 	return new Point(this.origin.x + this.size.w, this.origin.y + this.size.h);
 };
 
+/*Returns the coordinates for the lower left corner*/
 Frame.prototype.ll = function(){
 	return new Point(this.origin.x, this.origin.y + this.size.h);
 };
 
+/*Returns the coordinates for the center*/
 Frame.prototype.c = function(){
 	return new Point(this.origin.x + (this.size.w/2), this.origin.y + (this.size.h/2));
 };
@@ -111,10 +125,11 @@ function Frame(x,y, w, h){
 function Point(x, y){
 	this.x = x;
 	this.y = y;
-};
+}; //maybe add a declerating and accerlating method, perhaps not to the points but the frame. still, cool idea.
 
 /*Size object*/
 function Size(w, h){
 	this.w = w;
 	this.h = h;
-};
+	//array of side lengths maybe
+}; //is it possible to draw a triangle from sprite to a canvas?
