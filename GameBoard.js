@@ -66,6 +66,7 @@ GameBoard.prototype.visualize = function(){
     	ctx.stroke();
 	}
 };
+
 /*Fills the blocks*/
 GameBoard.prototype.fillGrid = function(c){
 	var ctx = this.context();
@@ -82,9 +83,25 @@ GameBoard.prototype.fillGrid = function(c){
 	}
 };
 
+GameBoard.prototype.addViews = function(){
+	for(var i in arguments){
+		this.views.push(arguments[i]);
+	}
+};
+
+GameBoard.prototype.removeViews = function(){
+	for(var i in arguments){
+		var id = arguments[i];
+		this.views = this.views.filter(function(view){
+			return !(view.id === id);
+		});
+	}
+};
+
 function GameBoard(rows, columns){
 	this.rows = rows;
 	this.cols = columns;
+	this.views = [];
 };
 
 /*View Object Methods*/
@@ -93,11 +110,34 @@ View.prototype.draw = function(){
 
 };
 
-/*View object*/
-function View(){
-
+/*Adds an animation sequence to a view. Pass in an sequence object*/
+View.prototype.addSequence = function(s){
+	sequence.push(s);
 };
 
+View.prototype.removeSeq = function(sequence){
+	sequence = sequence.filter(function(s){
+		return !(s === sequence);
+	})
+};
+/*View object*/
+function View(frame, id){
+	this.frame = frame;
+	this.sequence = [];
+	this.id = id;
+};
+
+/*Sprite object*/
+function Sprite(x, y){
+	this.x = x;
+	this.y = y;
+};
+
+/*Sequence object*/
+function Sequence(s, d){
+	this.sprite = s;
+	this.duration = d;
+};
 
 /*Frame Object Methods*/
 
