@@ -56,7 +56,6 @@ GameBoard.prototype.visualize = function(){
 		ctx.strokeStyle = c;
 		ctx.closePath();
 		ctx.stroke();
-
 	}
 	for(var i = 0; i < this.rows; i++){
 		ctx.beginPath();
@@ -70,4 +69,41 @@ GameBoard.prototype.visualize = function(){
 function GameBoard(rows, columns){
 	this.rows = rows;
 	this.cols = columns;
+};
+
+/*View Object Methods*/
+
+View.prototype.draw = function(){
+
+};
+
+/*View object*/
+function View(){
+
+};
+
+
+/*Frame Object Methods*/
+
+Frame.prototype.tr = function(){
+
+};
+
+Frame.prototype.lr = function(){
+
+};
+
+Frame.prototype.ll = function(){
+
+};
+
+function Frame(x,y, w, h){
+	this.origin = new Point(x, y);
+};
+
+
+/*Point object*/
+function Point(x, y){
+	this.x = x;
+	this.y = y;
 };
