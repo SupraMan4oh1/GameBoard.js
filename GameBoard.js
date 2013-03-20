@@ -47,7 +47,7 @@ GameBoard.prototype.drawCurves = function(num){
 /*View your canvas divided up into rows and columns*/
 GameBoard.prototype.visualize = function(){
 	var c;
-	if(arguments.length === 2) fillGrid(arguments[2]);
+	if(arguments.length === 2) this.fillGrid(arguments[1]);
 	arguments.length >= 1 ? c = arguments[0] : c = "#000000";
 	var ctx = this.context();
 	for(var i = 0; i < this.cols; i++){
@@ -66,12 +66,18 @@ GameBoard.prototype.visualize = function(){
     	ctx.stroke();
 	}
 };
-
-var fillGrid = function(c){
+/*Fills the blocks*/
+GameBoard.prototype.fillGrid = function(c){
 	var ctx = this.context();
+	ctx.fillStyle = c;
 	for(var i = 0; i < this.rows; i++){
 		for(var j = 0; j < this.cols; j++){
-			//fill grid drawing here
+			ctx.beginPath();
+			ctx.moveTo(j * (this.canvas().width/this.cols), i * (this.canvas().height/this.rows));
+			ctx.lineTo(j *(this.canvas().width/this.cols) + (this.canvas().width/this.cols), i * (this.canvas().height/this.rows));
+			ctx.lineTo(j * (this.canvas().width/this.cols) + (this.canvas().width/this.cols), (i+1) * (this.canvas().height/this.rows));
+			ctx.lineTo(j * (this.canvas().width/this.cols), i * (this.canvas().height/this.rows) + (this.canvas().height/this.rows));
+			ctx.fill();
 		}
 	}
 };

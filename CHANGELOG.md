@@ -1,7 +1,11 @@
+v2.0.0
+======
+- Complete start over and redesign.
+
 v0.1.4
 ======
 - Refactoring
-	- Code updated to Javascript closure
+	- Code updated to Javascript closure pattern
 
 v0.1.3
 ======
