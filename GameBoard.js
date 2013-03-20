@@ -86,24 +86,35 @@ function View(){
 /*Frame Object Methods*/
 
 Frame.prototype.tr = function(){
-
+	return new Point(this.origin.x + this.size.w, this.origin.y);
 };
 
 Frame.prototype.lr = function(){
-
+	return new Point(this.origin.x + this.size.w, this.origin.y + this.size.h);
 };
 
 Frame.prototype.ll = function(){
-
+	return new Point(this.origin.x, this.origin.y + this.size.h);
 };
 
+Frame.prototype.c = function(){
+	return new Point(this.origin.x + (this.size.w/2), this.origin.y + (this.size.h/2));
+};
+
+/*Frame object*/
 function Frame(x,y, w, h){
 	this.origin = new Point(x, y);
+	this.size = new Size(w, h);
 };
-
 
 /*Point object*/
 function Point(x, y){
 	this.x = x;
 	this.y = y;
+};
+
+/*Size object*/
+function Size(w, h){
+	this.w = w;
+	this.h = h;
 };
